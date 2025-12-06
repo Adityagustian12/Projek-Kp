@@ -12,6 +12,17 @@ class PublicController extends Controller
      */
     public function index()
     {
+        // Redirect authenticated users with occupied booking to tenant dashboard
+        if (auth()->check()) {
+            $user = auth()->user();
+            if ($user->hasActiveBooking() || $user->role === 'tenant') {
+                return redirect()->route('tenant.dashboard');
+            }
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+        }
+
         $rooms = Room::orderByRaw("FIELD(status, 'available', 'occupied', 'maintenance')")
                     ->orderBy('room_number')
                     ->get();

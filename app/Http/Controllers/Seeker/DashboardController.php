@@ -20,6 +20,12 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
+        // Redirect to tenant dashboard if user has occupied booking (verified by admin)
+        if ($user->hasActiveBooking() || $user->role === 'tenant') {
+            return redirect()->route('tenant.dashboard')
+                           ->with('success', 'Selamat! Booking Anda telah dikonfirmasi. Anda sekarang adalah penghuni.');
+        }
+
         $stats = [
             'total_bookings' => Booking::where('user_id', $user->id)->count(),
             'pending_bookings' => Booking::where('user_id', $user->id)->where('status', 'pending')->count(),

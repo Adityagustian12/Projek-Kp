@@ -37,12 +37,18 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
+            // Check if user has active occupied booking (verified by admin)
+            // If yes, redirect to tenant dashboard even if role is still seeker
+            $hasOccupiedBooking = $user->bookings()
+                ->where('status', 'occupied')
+                ->exists();
+
             // Use intended URL if present (e.g., user tried to access booking form),
             // otherwise fallback based on user role
             $fallback = match ($user->role) {
                 'admin' => route('admin.dashboard'),
                 'tenant' => route('tenant.dashboard'),
-                'seeker' => route('seeker.dashboard'),
+                'seeker' => $hasOccupiedBooking ? route('tenant.dashboard') : route('seeker.dashboard'),
                 default => route('public.home'),
             };
 
