@@ -12,7 +12,7 @@ class PublicController extends Controller
      */
     public function index()
     {
-        $rooms = Room::where('status', 'available')
+        $rooms = Room::orderByRaw("FIELD(status, 'available', 'occupied', 'maintenance')")
                     ->orderBy('room_number')
                     ->get();
         
@@ -36,7 +36,15 @@ class PublicController extends Controller
     public function showBookingForm(Room $room)
     {
         if (!auth()->check()) {
-            return redirect()->route('login')->with('message', 'Silakan login terlebih dahulu untuk melakukan booking.');
+            return redirect()->route('register');
+        }
+
+        $user = auth()->user();
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard')->with('error', 'Admin tidak dapat mengakses form booking.');
+        }
+        if ($user->role === 'tenant') {
+            return redirect()->route('tenant.dashboard')->with('error', 'Penghuni tidak dapat melakukan booking baru.');
         }
 
         return view('public.booking-form', compact('room'));

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Kos-Kosan Management System')</title>
+    <title>@yield('title', 'Kos-Kosan H.Kastim System')</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -29,6 +29,15 @@
         .main-content {
             min-height: calc(100vh - 56px);
         }
+        /* Pastikan teks user di navbar terlihat jelas di background biru */
+        .navbar.bg-primary .nav-link,
+        .navbar.bg-primary .navbar-brand {
+            color: #fff !important;
+        }
+        .navbar.bg-primary .nav-link:hover,
+        .navbar.bg-primary .nav-link:focus {
+            color: #e6e6e6 !important;
+        }
     </style>
     
     @yield('styles')
@@ -37,9 +46,9 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('public.home') }}">
-                <i class="fas fa-home me-2"></i>Kos-Kosan Management
-            </a>
+            <span class="navbar-brand">
+                <i class="fas fa-home me-2"></i>Kos-Kosan H.Kastim
+            </span>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -83,20 +92,7 @@
         @yield('content')
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>Kos-Kosan Management System</h5>
-                    <p class="mb-0">Sistem manajemen kos-kosan yang mudah dan efisien.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <p class="mb-0">&copy; {{ date('Y') }} All rights reserved.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

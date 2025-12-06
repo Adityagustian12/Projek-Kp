@@ -83,15 +83,7 @@
                                         <strong>Tanggal Check-in:</strong>
                                         <p class="text-muted mb-0">{{ $booking->check_in_date->format('d M Y') }}</p>
                                     </div>
-                                    @if($booking->check_out_date)
-                                        <div class="col-md-6 mb-3">
-                                            <strong>Tanggal Check-out:</strong>
-                                            <p class="text-muted mb-0">{{ $booking->check_out_date->format('d M Y') }}</p>
-                                        </div>
-                                    @endif
                                     <div class="col-md-6 mb-3">
-                                        <strong>Booking Fee:</strong>
-                                        <p class="text-muted mb-0">Rp {{ number_format($booking->booking_fee, 0, ',', '.') }}</p>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <strong>Tanggal Dibuat:</strong>
@@ -203,37 +195,51 @@
                             </div>
                         </div>
                         @endif
+
+                        @if($booking->status === 'pending' && !$booking->payment_proof)
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-wallet me-2"></i>Bayar DP Booking (Minimal Rp 200.000)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form action="{{ route('bookings.payment-proof', $booking) }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <div class="mb-3">
+                                        <label for="amount" class="form-label">Nominal DP <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">Rp</span>
+                                            <input type="number" class="form-control @error('amount') is-invalid @enderror" id="amount" name="amount" min="200000" step="1000" value="{{ old('amount', 200000) }}" required>
+                                        </div>
+                                        @error('amount')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <div class="form-text">Minimal Rp 200.000</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="payment_proof" class="form-label">Bukti Pembayaran <span class="text-danger">*</span></label>
+                                        <input type="file" class="form-control @error('payment_proof') is-invalid @enderror" id="payment_proof" name="payment_proof" accept="image/*,.pdf" required>
+                                        @error('payment_proof')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <div class="form-text">Format: JPG, PNG, PDF. Maks 2MB.</div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-paper-plane me-2"></i>Kirim Bukti DP
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        @endif
                     </div>
 
                     <!-- Sidebar -->
                     <div class="col-lg-4">
-                        <!-- Quick Actions -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-bolt me-2"></i>Aksi Cepat
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    <a href="{{ route('public.room.detail', $booking->room) }}" class="btn btn-outline-primary">
-                                        <i class="fas fa-eye me-2"></i>Lihat Detail Kamar
-                                    </a>
-                                    
-                                    @if($booking->status === 'pending' && !$booking->payment_proof)
-                                        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#paymentModal">
-                                            <i class="fas fa-upload me-2"></i>Upload Bukti Pembayaran
-                                        </button>
-                                    @endif
-
-                                    @if($booking->status === 'pending')
-                                        <button type="button" class="btn btn-danger" onclick="cancelBooking({{ $booking->id }})">
-                                            <i class="fas fa-times me-2"></i>Batalkan Booking
-                                        </button>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Room Information -->
                         <div class="card mb-4">
@@ -324,39 +330,6 @@
     </div>
 </div>
 
-<!-- Payment Modal -->
-@if($booking->status === 'pending' && !$booking->payment_proof)
-<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="paymentModalLabel">
-                    <i class="fas fa-upload me-2"></i>Upload Bukti Pembayaran
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('bookings.payment-proof', $booking) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="payment_proof" class="form-label">Bukti Pembayaran <span class="text-danger">*</span></label>
-                        <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/*,.pdf" required>
-                        <div class="form-text">
-                            Upload bukti pembayaran (format: JPG, PNG, PDF, maksimal 2MB)
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-upload me-2"></i>Upload
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
 
 <style>
 .sidebar {

@@ -44,13 +44,7 @@
                         <h2 class="mb-0">
                             <i class="fas fa-exclamation-triangle me-2"></i>Detail Keluhan #{{ $complaint->id }}
                         </h2>
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('admin.complaints') }}">Kelola Keluhan</a></li>
-                                <li class="breadcrumb-item active">Detail Keluhan</li>
-                            </ol>
-                        </nav>
+                        
                     </div>
                     <div>
                         <a href="{{ route('admin.complaints') }}" class="btn btn-outline-secondary me-2">
@@ -78,26 +72,8 @@
                                         <strong>Judul Keluhan:</strong>
                                         <p class="text-muted mb-0">{{ $complaint->title }}</p>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <strong>Kategori:</strong>
-                                        <p class="text-muted mb-0">
-                                            <span class="badge bg-secondary">{{ ucfirst($complaint->category) }}</span>
-                                        </p>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <strong>Prioritas:</strong>
-                                        <p class="text-muted mb-0">
-                                            @if($complaint->priority === 'urgent')
-                                                <span class="badge bg-danger">Mendesak</span>
-                                            @elseif($complaint->priority === 'high')
-                                                <span class="badge bg-warning">Tinggi</span>
-                                            @elseif($complaint->priority === 'medium')
-                                                <span class="badge bg-info">Sedang</span>
-                                            @else
-                                                <span class="badge bg-success">Rendah</span>
-                                            @endif
-                                        </p>
-                                    </div>
+                                    
+                                    
                                     <div class="col-md-6 mb-3">
                                         <strong>Status:</strong>
                                         <p class="text-muted mb-0">
@@ -183,24 +159,6 @@
 
                     <!-- Sidebar -->
                     <div class="col-lg-4">
-                        <!-- Quick Actions -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-bolt me-2"></i>Aksi Cepat
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-warning" onclick="updateComplaintStatus({{ $complaint->id }})">
-                                        <i class="fas fa-edit me-2"></i>Update Status
-                                    </button>
-                                    <button class="btn btn-info" onclick="sendResponse({{ $complaint->id }})">
-                                        <i class="fas fa-reply me-2"></i>Kirim Tanggapan
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- User Information -->
                         <div class="card mb-4">
@@ -231,26 +189,40 @@
                         <div class="card mb-4">
                             <div class="card-header">
                                 <h5 class="mb-0">
-                                    <i class="fas fa-bed me-2"></i>Info Kamar
+                                    <i class="fas fa-bed me-2"></i>Kamar yang Ditempati
                                 </h5>
                             </div>
                             <div class="card-body">
+                                @php
+                                    $currentRoom = $complaint->user->getCurrentRoom();
+                                @endphp
                                 <div class="row">
                                     <div class="col-12 mb-2">
-                                        <strong>Nomor Kamar:</strong> {{ $complaint->room->room_number }}
+                                        <strong>Nomor Kamar:</strong> 
+                                        @if($currentRoom)
+                                            {{ $currentRoom->room_number }}
+                                        @else
+                                            <span class="text-muted">Tidak Menempati Kamar</span>
+                                        @endif
                                     </div>
-                                    <div class="col-12 mb-2">
-                                        <strong>Harga:</strong> Rp {{ number_format($complaint->room->price, 0, ',', '.') }}/bulan
-                                    </div>
-                                    <div class="col-12 mb-2">
-                                        <strong>Kapasitas:</strong> {{ $complaint->room->capacity }} orang
-                                    </div>
-                                    <div class="col-12">
-                                        <strong>Status:</strong> 
-                                        <span class="badge bg-{{ $complaint->room->status === 'available' ? 'success' : ($complaint->room->status === 'occupied' ? 'warning' : 'danger') }}">
-                                            {{ $complaint->room->status === 'available' ? 'Tersedia' : ($complaint->room->status === 'occupied' ? 'Terisi' : 'Maintenance') }}
-                                        </span>
-                                    </div>
+                                    @if($currentRoom)
+                                        <div class="col-12 mb-2">
+                                            <strong>Harga:</strong> Rp {{ number_format($currentRoom->price, 0, ',', '.') }}/bulan
+                                        </div>
+                                        <div class="col-12 mb-2">
+                                            <strong>Kapasitas:</strong> {{ $currentRoom->capacity }} orang
+                                        </div>
+                                        <div class="col-12">
+                                            <strong>Status:</strong> 
+                                            <span class="badge bg-{{ $currentRoom->status === 'available' ? 'success' : ($currentRoom->status === 'occupied' ? 'warning' : 'danger') }}">
+                                                {{ $currentRoom->status === 'available' ? 'Tersedia' : ($currentRoom->status === 'occupied' ? 'Terisi' : 'Maintenance') }}
+                                            </span>
+                                        </div>
+                                    @else
+                                        <div class="col-12">
+                                            <span class="text-muted">Penghuni tidak sedang menempati kamar</span>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -315,25 +287,13 @@
                 @csrf
                 @method('PUT')
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                            <select class="form-select" id="status" name="status" required>
-                                <option value="new" {{ $complaint->status === 'new' ? 'selected' : '' }}>Baru</option>
-                                <option value="in_progress" {{ $complaint->status === 'in_progress' ? 'selected' : '' }}>Sedang Diproses</option>
-                                <option value="resolved" {{ $complaint->status === 'resolved' ? 'selected' : '' }}>Selesai</option>
-                                <option value="closed" {{ $complaint->status === 'closed' ? 'selected' : '' }}>Ditutup</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="priority" class="form-label">Prioritas</label>
-                            <select class="form-select" id="priority" name="priority">
-                                <option value="low" {{ $complaint->priority === 'low' ? 'selected' : '' }}>Rendah</option>
-                                <option value="medium" {{ $complaint->priority === 'medium' ? 'selected' : '' }}>Sedang</option>
-                                <option value="high" {{ $complaint->priority === 'high' ? 'selected' : '' }}>Tinggi</option>
-                                <option value="urgent" {{ $complaint->priority === 'urgent' ? 'selected' : '' }}>Mendesak</option>
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="new" {{ $complaint->status === 'new' ? 'selected' : '' }}>Baru</option>
+                            <option value="in_progress" {{ $complaint->status === 'in_progress' ? 'selected' : '' }}>Sedang Diproses</option>
+                            <option value="resolved" {{ $complaint->status === 'resolved' ? 'selected' : '' }}>Selesai</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="admin_response" class="form-label">Tanggapan Admin</label>

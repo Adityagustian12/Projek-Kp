@@ -37,55 +37,6 @@
                     </div>
                 </div>
 
-                <!-- Filter Section -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <form method="GET" action="{{ route('tenant.complaints') }}" class="row g-3">
-                            <div class="col-md-3">
-                                <label for="status" class="form-label">Status Keluhan</label>
-                                <select name="status" id="status" class="form-select">
-                                    <option value="">Semua Status</option>
-                                    <option value="new" {{ request('status') == 'new' ? 'selected' : '' }}>Baru</option>
-                                    <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>Sedang Diproses</option>
-                                    <option value="resolved" {{ request('status') == 'resolved' ? 'selected' : '' }}>Selesai</option>
-                                    <option value="closed" {{ request('status') == 'closed' ? 'selected' : '' }}>Ditutup</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="priority" class="form-label">Prioritas</label>
-                                <select name="priority" id="priority" class="form-select">
-                                    <option value="">Semua Prioritas</option>
-                                    <option value="low" {{ request('priority') == 'low' ? 'selected' : '' }}>Rendah</option>
-                                    <option value="medium" {{ request('priority') == 'medium' ? 'selected' : '' }}>Sedang</option>
-                                    <option value="high" {{ request('priority') == 'high' ? 'selected' : '' }}>Tinggi</option>
-                                    <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>Mendesak</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="category" class="form-label">Kategori</label>
-                                <select name="category" id="category" class="form-select">
-                                    <option value="">Semua Kategori</option>
-                                    <option value="facility" {{ request('category') == 'facility' ? 'selected' : '' }}>Fasilitas</option>
-                                    <option value="maintenance" {{ request('category') == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-                                    <option value="noise" {{ request('category') == 'noise' ? 'selected' : '' }}>Kebisingan</option>
-                                    <option value="security" {{ request('category') == 'security' ? 'selected' : '' }}>Keamanan</option>
-                                    <option value="other" {{ request('category') == 'other' ? 'selected' : '' }}>Lainnya</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">&nbsp;</label>
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-search me-2"></i>Filter
-                                    </button>
-                                    <a href="{{ route('tenant.complaints') }}" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times me-2"></i>Reset
-                                    </a>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
                 <!-- Complaints Table -->
                 <div class="card">
@@ -102,8 +53,8 @@
                                         <tr>
                                             <th>No. Keluhan</th>
                                             <th>Judul</th>
-                                            <th>Kategori</th>
-                                            <th>Prioritas</th>
+                                            
+                                            
                                             <th>Status</th>
                                             <th>Tanggal</th>
                                             <th>Aksi</th>
@@ -124,20 +75,8 @@
                                                         @endif
                                                     </div>
                                                 </td>
-                                                <td>
-                                                    <span class="badge bg-secondary">{{ ucfirst($complaint->category) }}</span>
-                                                </td>
-                                                <td>
-                                                    @if($complaint->priority === 'urgent')
-                                                        <span class="badge bg-danger">Mendesak</span>
-                                                    @elseif($complaint->priority === 'high')
-                                                        <span class="badge bg-warning">Tinggi</span>
-                                                    @elseif($complaint->priority === 'medium')
-                                                        <span class="badge bg-info">Sedang</span>
-                                                    @else
-                                                        <span class="badge bg-success">Rendah</span>
-                                                    @endif
-                                                </td>
+                                                
+                                                
                                                 <td>
                                                     @if($complaint->status === 'new')
                                                         <span class="badge bg-primary">Baru</span>
@@ -239,21 +178,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card bg-danger text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h4 class="mb-0">{{ $complaints->where('priority', 'urgent')->count() }}</h4>
-                                        <p class="mb-0">Mendesak</p>
-                                    </div>
-                                    <div class="align-self-center">
-                                        <i class="fas fa-fire fa-2x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
                 </div>
                 @endif
             </div>

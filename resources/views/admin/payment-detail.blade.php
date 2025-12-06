@@ -44,13 +44,7 @@
                         <h2 class="mb-0">
                             <i class="fas fa-credit-card me-2"></i>Detail Pembayaran #{{ $payment->id }}
                         </h2>
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('admin.payments') }}">Kelola Pembayaran</a></li>
-                                <li class="breadcrumb-item active">Detail Pembayaran</li>
-                            </ol>
-                        </nav>
+                        
                     </div>
                     <div>
                         <a href="{{ route('admin.payments') }}" class="btn btn-outline-secondary me-2">
@@ -104,6 +98,10 @@
                                         <p class="text-muted mb-0">
                                             @if($payment->payment_method === 'bank_transfer')
                                                 <span class="badge bg-primary">Transfer Bank</span>
+                                            @elseif($payment->payment_method === 'dana')
+                                                <span class="badge bg-info">DANA</span>
+                                            @elseif($payment->payment_method === 'gopay')
+                                                <span class="badge bg-success">GoPay</span>
                                             @elseif($payment->payment_method === 'cash')
                                                 <span class="badge bg-success">Tunai</span>
                                             @elseif($payment->payment_method === 'e_wallet')
@@ -115,12 +113,12 @@
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <strong>Tanggal Pembayaran:</strong>
-                                        <p class="text-muted mb-0">{{ $payment->created_at->format('d M Y H:i') }}</p>
+                                        <p class="text-muted mb-0">{{ $payment->created_at ? $payment->created_at->format('d M Y H:i') : 'N/A' }}</p>
                                     </div>
                                     @if($payment->verified_at)
                                         <div class="col-md-6 mb-3">
                                             <strong>Tanggal Verifikasi:</strong>
-                                            <p class="text-muted mb-0">{{ $payment->verified_at->format('d M Y H:i') }}</p>
+                                            <p class="text-muted mb-0">{{ $payment->verified_at ? $payment->verified_at->format('d M Y H:i') : 'N/A' }}</p>
                                         </div>
                                     @endif
                                 </div>
@@ -202,29 +200,6 @@
 
                     <!-- Sidebar -->
                     <div class="col-lg-4">
-                        <!-- Quick Actions -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-bolt me-2"></i>Aksi Cepat
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    @if($payment->status === 'pending')
-                                        <button class="btn btn-success" onclick="verifyPayment({{ $payment->id }}, 'verified')">
-                                            <i class="fas fa-check me-2"></i>Verifikasi Pembayaran
-                                        </button>
-                                        <button class="btn btn-danger" onclick="verifyPayment({{ $payment->id }}, 'rejected')">
-                                            <i class="fas fa-times me-2"></i>Tolak Pembayaran
-                                        </button>
-                                    @endif
-                                    <a href="{{ route('admin.bills.detail', $payment->bill) }}" class="btn btn-outline-primary">
-                                        <i class="fas fa-file-invoice me-2"></i>Lihat Tagihan
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- User Information -->
                         <div class="card mb-4">
@@ -234,6 +209,7 @@
                                 </h5>
                             </div>
                             <div class="card-body">
+                                @if($payment->user)
                                 <div class="row">
                                     <div class="col-12 mb-2">
                                         <strong>Nama:</strong> {{ $payment->user->name }}
@@ -248,6 +224,13 @@
                                         <strong>Alamat:</strong> {{ $payment->user->address ?? 'Tidak ada' }}
                                     </div>
                                 </div>
+                                @else
+                                <div class="text-center py-4">
+                                    <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">User tidak ditemukan</h6>
+                                    <p class="text-muted small">User mungkin sudah dihapus dari sistem.</p>
+                                </div>
+                                @endif
                             </div>
                         </div>
 
@@ -259,12 +242,13 @@
                                 </h5>
                             </div>
                             <div class="card-body">
+                                @if($payment->bill)
                                 <div class="row">
                                     <div class="col-12 mb-2">
                                         <strong>Nomor Tagihan:</strong> #{{ $payment->bill->id }}
                                     </div>
                                     <div class="col-12 mb-2">
-                                        <strong>Kamar:</strong> {{ $payment->bill->room->room_number }}
+                                        <strong>Kamar:</strong> {{ $payment->bill->room ? $payment->bill->room->room_number : 'Kamar tidak ditemukan' }}
                                     </div>
                                     <div class="col-12 mb-2">
                                         <strong>Periode:</strong> {{ \Carbon\Carbon::create()->month($payment->bill->month)->format('F') }} {{ $payment->bill->year }}
@@ -283,6 +267,13 @@
                                         @endif
                                     </div>
                                 </div>
+                                @else
+                                <div class="text-center py-4">
+                                    <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">Tagihan tidak ditemukan</h6>
+                                    <p class="text-muted small">Tagihan mungkin sudah dihapus dari sistem.</p>
+                                </div>
+                                @endif
                             </div>
                         </div>
 
@@ -302,7 +293,7 @@
                                             Oleh: {{ $payment->verifier->name ?? 'Admin' }}
                                         </p>
                                         <p class="text-muted mb-0">
-                                            {{ $payment->verified_at->format('d M Y H:i') }}
+                                            {{ $payment->verified_at ? $payment->verified_at->format('d M Y H:i') : 'N/A' }}
                                         </p>
                                     </div>
                                 @elseif($payment->status === 'rejected')
@@ -313,7 +304,7 @@
                                             Oleh: {{ $payment->verifier->name ?? 'Admin' }}
                                         </p>
                                         <p class="text-muted mb-0">
-                                            {{ $payment->verified_at->format('d M Y H:i') }}
+                                            {{ $payment->verified_at ? $payment->verified_at->format('d M Y H:i') : 'N/A' }}
                                         </p>
                                     </div>
                                 @else

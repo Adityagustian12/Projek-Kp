@@ -44,13 +44,7 @@
                         <h2 class="mb-0">
                             <i class="fas fa-file-invoice me-2"></i>Detail Tagihan #{{ $bill->id }}
                         </h2>
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('admin.bills') }}">Kelola Tagihan</a></li>
-                                <li class="breadcrumb-item active">Detail Tagihan</li>
-                            </ol>
-                        </nav>
+                        
                     </div>
                     <div>
                         <a href="{{ route('admin.bills') }}" class="btn btn-outline-secondary me-2">
@@ -177,6 +171,10 @@
                                                     <td>
                                                         @if($payment->payment_method === 'bank_transfer')
                                                             <span class="badge bg-primary">Transfer Bank</span>
+                                                        @elseif($payment->payment_method === 'dana')
+                                                            <span class="badge bg-info">DANA</span>
+                                                        @elseif($payment->payment_method === 'gopay')
+                                                            <span class="badge bg-success">GoPay</span>
                                                         @elseif($payment->payment_method === 'cash')
                                                             <span class="badge bg-success">Tunai</span>
                                                         @elseif($payment->payment_method === 'e_wallet')
@@ -233,31 +231,6 @@
 
                     <!-- Sidebar -->
                     <div class="col-lg-4">
-                        <!-- Quick Actions -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-bolt me-2"></i>Aksi Cepat
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    @if($bill->status !== 'paid')
-                                        <button class="btn btn-warning" onclick="editBill({{ $bill->id }})">
-                                            <i class="fas fa-edit me-2"></i>Edit Tagihan
-                                        </button>
-                                    @endif
-                                    <button class="btn btn-outline-primary" onclick="printBill()">
-                                        <i class="fas fa-print me-2"></i>Cetak Tagihan
-                                    </button>
-                                    @if($bill->status !== 'paid' && !$bill->payments()->where('status', 'verified')->exists())
-                                        <button class="btn btn-danger" onclick="deleteBill({{ $bill->id }})">
-                                            <i class="fas fa-trash me-2"></i>Hapus Tagihan
-                                        </button>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Tenant Information -->
                         <div class="card mb-4">
@@ -267,6 +240,7 @@
                                 </h5>
                             </div>
                             <div class="card-body">
+                                @if($bill->user)
                                 <div class="row">
                                     <div class="col-12 mb-2">
                                         <strong>Nama:</strong> {{ $bill->user->name }}
@@ -281,6 +255,13 @@
                                         <strong>Alamat:</strong> {{ $bill->user->address ?? 'Tidak ada' }}
                                     </div>
                                 </div>
+                                @else
+                                <div class="text-center py-4">
+                                    <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">User tidak ditemukan</h6>
+                                    <p class="text-muted small">User mungkin sudah dihapus dari sistem.</p>
+                                </div>
+                                @endif
                             </div>
                         </div>
 
@@ -292,6 +273,7 @@
                                 </h5>
                             </div>
                             <div class="card-body">
+                                @if($bill->room)
                                 <div class="row">
                                     <div class="col-12 mb-2">
                                         <strong>Nomor Kamar:</strong> {{ $bill->room->room_number }}
@@ -309,6 +291,13 @@
                                         </span>
                                     </div>
                                 </div>
+                                @else
+                                <div class="text-center py-4">
+                                    <i class="fas fa-bed fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">Kamar tidak ditemukan</h6>
+                                    <p class="text-muted small">Kamar mungkin sudah dihapus dari sistem.</p>
+                                </div>
+                                @endif
                             </div>
                         </div>
 
@@ -332,8 +321,11 @@
                                     <div class="text-center">
                                         <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
                                         <h5 class="text-danger">Terlambat</h5>
+                                        @php
+                                            $daysLate = \Carbon\Carbon::parse($bill->due_date)->startOfDay()->diffInDays(now()->startOfDay(), false);
+                                        @endphp
                                         <p class="text-muted mb-0">
-                                            Terlambat {{ \Carbon\Carbon::parse($bill->due_date)->diffInDays(now()) }} hari
+                                            Terlambat {{ max(0, (int) $daysLate) }} hari
                                         </p>
                                     </div>
                                 @else
@@ -343,8 +335,11 @@
                                         <p class="text-muted mb-0">
                                             Jatuh tempo: {{ \Carbon\Carbon::parse($bill->due_date)->format('d M Y') }}
                                         </p>
+                                        @php
+                                            $daysLeft = \Carbon\Carbon::now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($bill->due_date)->startOfDay(), false);
+                                        @endphp
                                         <p class="text-warning mb-0">
-                                            {{ \Carbon\Carbon::parse($bill->due_date)->diffInDays(now()) }} hari lagi
+                                            {{ $daysLeft > 0 ? (int) $daysLeft . ' hari lagi' : 'Hari ini jatuh tempo' }}
                                         </p>
                                     </div>
                                 @endif
@@ -398,13 +393,13 @@
                     </div>
                     <div class="col-6">
                         <strong>Penghuni:</strong><br>
-                        <span class="text-muted">{{ $bill->user->name }}</span>
+                        <span class="text-muted">{{ $bill->user ? $bill->user->name : 'User tidak ditemukan' }}</span>
                     </div>
                 </div>
                 <div class="row mt-2">
                     <div class="col-6">
                         <strong>Kamar:</strong><br>
-                        <span class="text-muted">{{ $bill->room->room_number }}</span>
+                        <span class="text-muted">{{ $bill->room ? $bill->room->room_number : 'Kamar tidak ditemukan' }}</span>
                     </div>
                     <div class="col-6">
                         <strong>Jumlah:</strong><br>

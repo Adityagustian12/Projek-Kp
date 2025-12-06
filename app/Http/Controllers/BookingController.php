@@ -27,9 +27,33 @@ class BookingController extends Controller
             'room_id' => 'required|exists:rooms,id',
             'check_in_date' => 'required|date|after:today',
             'check_out_date' => 'nullable|date|after:check_in_date',
-            'booking_fee' => 'required|numeric|min:0',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:20',
+            'address' => 'required|string|max:500',
             'documents.*' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'amount' => 'required|numeric|min:200000',
+            'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'notes' => 'nullable|string|max:500',
+        ]);
+
+        // Prevent user from having multiple active bookings
+        $hasActiveBooking = Booking::where('user_id', Auth::id())
+            ->whereIn('status', ['pending', 'confirmed', 'occupied'])
+            ->exists();
+        if ($hasActiveBooking) {
+            return redirect()->back()
+                           ->withErrors(['booking' => 'Anda masih memiliki booking aktif. Selesaikan atau batalkan booking sebelumnya sebelum membuat yang baru.'])
+                           ->withInput();
+        }
+
+        // Update user data
+        $user = Auth::user();
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'address' => $request->address,
         ]);
 
         // Check if room is available
@@ -45,7 +69,6 @@ class BookingController extends Controller
             'room_id' => $request->room_id,
             'check_in_date' => $request->check_in_date,
             'check_out_date' => $request->check_out_date,
-            'booking_fee' => $request->booking_fee,
             'status' => 'pending',
             'notes' => $request->notes,
         ]);
@@ -60,10 +83,21 @@ class BookingController extends Controller
             $booking->documents = $documents;
         }
 
+        // Handle DP payment proof (store as array)
+        if ($request->hasFile('payment_proof')) {
+            $path = $request->file('payment_proof')->store('booking-payments', 'public');
+            $booking->payment_proof = [[
+                'path' => $path,
+                'amount' => $request->amount,
+                'created_at' => now()->toDateTimeString(),
+            ]];
+            $booking->dp_amount = $request->amount;
+        }
+
         $booking->save();
 
         return redirect()->route('seeker.dashboard')
-                        ->with('success', 'Booking berhasil dibuat. Silakan upload bukti pembayaran booking fee.');
+                        ->with('success', 'Booking berhasil dibuat. DP berhasil dilampirkan, menunggu verifikasi admin.');
     }
 
     /**
@@ -74,16 +108,20 @@ class BookingController extends Controller
         $this->authorize('update', $booking);
 
         $request->validate([
+            'amount' => 'required|numeric|min:200000',
             'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         if ($request->hasFile('payment_proof')) {
             $path = $request->file('payment_proof')->store('booking-payments', 'public');
-            $booking->update(['payment_proof' => $path]);
+            $booking->update([
+                'payment_proof' => $path,
+                'dp_amount' => $request->amount,
+            ]);
         }
 
         return redirect()->back()
-                        ->with('success', 'Bukti pembayaran berhasil diupload. Menunggu konfirmasi admin.');
+                        ->with('success', 'Bukti DP berhasil diupload. Menunggu verifikasi admin.');
     }
 
     /**
@@ -120,7 +158,9 @@ class BookingController extends Controller
                           ->orderBy('created_at', 'desc')
                           ->paginate(10);
 
-        return view('tenant.bookings', compact('bookings'));
+        // Use different views based on user role
+        $view = Auth::user()->role === 'tenant' ? 'tenant.bookings' : 'seeker.bookings';
+        return view($view, compact('bookings'));
     }
 
     /**

@@ -42,24 +42,6 @@
                     <h2 class="mb-0">
                         <i class="fas fa-calendar-check me-2"></i>Kelola Booking
                     </h2>
-                    <div class="btn-group" role="group">
-                        <a href="{{ route('admin.bookings', ['status' => 'all']) }}" 
-                           class="btn {{ request('status') == 'all' || !request('status') ? 'btn-primary' : 'btn-outline-primary' }}">
-                            Semua
-                        </a>
-                        <a href="{{ route('admin.bookings', ['status' => 'pending']) }}" 
-                           class="btn {{ request('status') == 'pending' ? 'btn-warning' : 'btn-outline-warning' }}">
-                            Pending
-                        </a>
-                        <a href="{{ route('admin.bookings', ['status' => 'confirmed']) }}" 
-                           class="btn {{ request('status') == 'confirmed' ? 'btn-success' : 'btn-outline-success' }}">
-                            Dikonfirmasi
-                        </a>
-                        <a href="{{ route('admin.bookings', ['status' => 'rejected']) }}" 
-                           class="btn {{ request('status') == 'rejected' ? 'btn-danger' : 'btn-outline-danger' }}">
-                            Ditolak
-                        </a>
-                    </div>
                 </div>
 
                 @if(session('success'))
@@ -88,8 +70,8 @@
                                             <th>Nama Pemesan</th>
                                             <th>Kamar</th>
                                             <th>Tanggal Masuk</th>
-                                            <th>Booking Fee</th>
                                             <th>Status</th>
+                                            <th>DP Masuk</th>
                                             <th>Tanggal Booking</th>
                                             <th>Aksi</th>
                                         </tr>
@@ -100,56 +82,53 @@
                                                 <td>{{ $booking->id }}</td>
                                                 <td>
                                                     <div>
-                                                        <strong>{{ $booking->user->name }}</strong>
+                                                        <strong>{{ $booking->user ? $booking->user->name : 'User tidak ditemukan' }}</strong>
                                                         <br>
-                                                        <small class="text-muted">{{ $booking->user->email }}</small>
+                                                        <small class="text-muted">{{ $booking->user ? $booking->user->email : 'N/A' }}</small>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div>
-                                                        <strong>{{ $booking->room->room_number }}</strong>
+                                                        <strong>{{ $booking->room ? $booking->room->room_number : 'Kamar tidak ditemukan' }}</strong>
                                                         <br>
-                                                        <small class="text-muted">Kapasitas: {{ $booking->room->capacity }} orang</small>
+                                                        <small class="text-muted">Kapasitas: {{ $booking->room ? $booking->room->capacity : 0 }} orang</small>
                                                     </div>
                                                 </td>
-                                                <td>{{ $booking->check_in_date->format('d M Y') }}</td>
-                                                <td>Rp {{ number_format($booking->booking_fee, 0, ',', '.') }}</td>
+                                                <td>{{ $booking->check_in_date ? $booking->check_in_date->format('d M Y') : 'N/A' }}</td>
                                                 <td>
-                                                    <span class="badge bg-{{ $booking->status === 'pending' ? 'warning' : ($booking->status === 'confirmed' ? 'success' : 'danger') }}">
-                                                        {{ ucfirst($booking->status) }}
+                                                    <span class="badge bg-{{ $booking->status === 'pending' ? 'warning' : ($booking->status === 'confirmed' ? 'success' : ($booking->status === 'occupied' ? 'secondary' : ($booking->status === 'completed' ? 'primary' : 'danger'))) }}">
+                                                        {{ [
+                                                            'pending' => 'Menunggu',
+                                                            'confirmed' => 'Dikonfirmasi',
+                                                            'rejected' => 'Ditolak',
+                                                            'occupied' => 'Terisi',
+                                                            'cancelled' => 'Dibatalkan',
+                                                            'completed' => 'Selesai',
+                                                        ][$booking->status] ?? ucfirst($booking->status) }}
                                                     </span>
                                                 </td>
-                                                <td>{{ $booking->created_at->format('d M Y H:i') }}</td>
+                                                <td>
+                                                    @php
+                                                        $dpCanShow = in_array($booking->status, ['confirmed','occupied','completed']);
+                                                        $dpRejected = in_array($booking->status, ['rejected','cancelled']);
+                                                    @endphp
+                                                    @if($dpCanShow && !is_null($booking->dp_amount))
+                                                        <span class="badge rounded-pill bg-primary text-white fw-semibold">Rp {{ number_format($booking->dp_amount, 0, ',', '.') }}</span>
+                                                    @elseif($dpRejected && !is_null($booking->dp_amount))
+                                                        <span class="badge rounded-pill bg-danger">Rp {{ number_format($booking->dp_amount, 0, ',', '.') }}</span>
+                                                    @elseif($booking->status === 'pending' && !is_null($booking->dp_amount))
+                                                        <span class="badge rounded-pill bg-secondary">Menunggu</span>
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
+                                                </td>
+                                                <td>{{ $booking->created_at ? $booking->created_at->format('d M Y H:i') : 'N/A' }}</td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm" role="group">
                                                         <a href="{{ route('admin.bookings.detail', $booking) }}" 
                                                            class="btn btn-outline-info" title="Lihat Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
-                                                        
-                                                        @if($booking->status === 'pending')
-                                                            <form action="{{ route('admin.bookings.confirm', $booking) }}" 
-                                                                  method="POST" class="d-inline">
-                                                                @csrf
-                                                                <button type="submit" 
-                                                                        class="btn btn-outline-success" 
-                                                                        title="Konfirmasi"
-                                                                        onclick="return confirm('Konfirmasi booking ini?')">
-                                                                    <i class="fas fa-check"></i>
-                                                                </button>
-                                                            </form>
-                                                            
-                                                            <form action="{{ route('admin.bookings.reject', $booking) }}" 
-                                                                  method="POST" class="d-inline">
-                                                                @csrf
-                                                                <button type="submit" 
-                                                                        class="btn btn-outline-danger" 
-                                                                        title="Tolak"
-                                                                        onclick="return confirm('Tolak booking ini?')">
-                                                                    <i class="fas fa-times"></i>
-                                                                </button>
-                                                            </form>
-                                                        @endif
                                                     </div>
                                                 </td>
                                             </tr>
@@ -158,9 +137,23 @@
                                 </table>
                             </div>
 
-                            <!-- Pagination -->
-                            <div class="d-flex justify-content-center mt-4">
-                                {{ $bookings->links() }}
+                            <!-- Pagination (simplified) -->
+                            <div class="d-flex flex-column align-items-center mt-4">
+                                <nav aria-label="Navigasi halaman">
+                                    <ul class="pagination pagination-sm mb-0">
+                                        <li class="page-item {{ $bookings->onFirstPage() ? 'disabled' : '' }}">
+                                            <a class="page-link" href="{{ $bookings->previousPageUrl() ?: '#' }}" tabindex="-1">Sebelumnya</a>
+                                        </li>
+                                        @for ($i = max(1, $bookings->currentPage() - 1); $i <= min($bookings->lastPage(), $bookings->currentPage() + 1); $i++)
+                                            <li class="page-item {{ $i === $bookings->currentPage() ? 'active' : '' }}">
+                                                <a class="page-link" href="{{ $bookings->url($i) }}">{{ $i }}</a>
+                                            </li>
+                                        @endfor
+                                        <li class="page-item {{ $bookings->currentPage() === $bookings->lastPage() ? 'disabled' : '' }}">
+                                            <a class="page-link" href="{{ $bookings->nextPageUrl() ?: '#' }}">Berikutnya</a>
+                                        </li>
+                                    </ul>
+                                </nav>
                             </div>
                         @else
                             <div class="text-center py-5">

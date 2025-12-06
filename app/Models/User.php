@@ -136,10 +136,31 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user currently has an active (occupied) booking
+     */
+    public function hasActiveBooking(): bool
+    {
+        return $this->bookings()->where('status', 'occupied')->exists();
+    }
+
+    /**
      * Get user's payments
      */
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Get user's current occupied room
+     */
+    public function getCurrentRoom()
+    {
+        $occupiedBooking = $this->bookings()
+                               ->where('status', 'occupied')
+                               ->with('room')
+                               ->first();
+        
+        return $occupiedBooking ? $occupiedBooking->room : null;
     }
 }

@@ -18,11 +18,16 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        $verifiedPayments = Payment::where('status', 'verified')->sum('amount');
+        // Hanya hitung DP yang sudah dikonfirmasi (booking tidak pending)
+        $dpSum = Booking::whereNotNull('dp_amount')
+                        ->whereIn('status', ['confirmed','occupied','completed'])
+                        ->sum('dp_amount');
         $stats = [
             'total_rooms' => Room::count(),
             'pending_bookings' => Booking::where('status', 'pending')->count(),
             'total_tenants' => User::where('role', 'tenant')->count(),
-            'total_revenue' => 'Rp ' . number_format(Booking::where('status', 'confirmed')->sum('booking_fee'), 0, ',', '.'),
+            'total_revenue' => 'Rp ' . number_format($verifiedPayments + $dpSum, 0, ',', '.'),
         ];
 
         $recent_bookings = Booking::with(['user', 'room'])
@@ -59,9 +64,7 @@ class DashboardController extends Controller
             'capacity' => 'required|integer|min:1',
             'area' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:1000',
-            'facilities' => 'nullable|array',
-            'facilities.*' => 'string|max:100',
-            'images' => 'nullable|array',
+            'images' => 'nullable|array|max:5',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -71,7 +74,6 @@ class DashboardController extends Controller
             'capacity' => $request->capacity,
             'area' => $request->area,
             'description' => $request->description,
-            'facilities' => $request->facilities ?? [],
             'status' => 'available',
         ]);
 
@@ -82,7 +84,7 @@ class DashboardController extends Controller
                 $path = $image->store('rooms', 'public');
                 $images[] = $path;
             }
-            $room->update(['images' => $images]);
+            $room->update(['images' => array_slice($images, 0, 5)]);
         }
 
         return redirect()->route('admin.rooms')
@@ -100,9 +102,7 @@ class DashboardController extends Controller
             'capacity' => 'required|integer|min:1',
             'area' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:1000',
-            'facilities' => 'nullable|array',
-            'facilities.*' => 'string|max:100',
-            'images' => 'nullable|array',
+            'images' => 'nullable|array|max:5',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -112,17 +112,18 @@ class DashboardController extends Controller
             'capacity' => $request->capacity,
             'area' => $request->area,
             'description' => $request->description,
-            'facilities' => $request->facilities ?? [],
         ]);
 
-        // Handle image uploads
+        // Handle image uploads (append up to 5 total)
         if ($request->hasFile('images')) {
-            $images = [];
+            $existingImages = is_array($room->images) ? $room->images : [];
+            $newImages = [];
             foreach ($request->file('images') as $image) {
                 $path = $image->store('rooms', 'public');
-                $images[] = $path;
+                $newImages[] = $path;
             }
-            $room->update(['images' => $images]);
+            $merged = array_slice(array_values(array_unique(array_merge($existingImages, $newImages))), 0, 5);
+            $room->update(['images' => $merged]);
         }
 
         return redirect()->route('admin.rooms')
@@ -221,23 +222,28 @@ class DashboardController extends Controller
             'admin_notes' => 'nullable|string|max:500',
         ]);
 
+        // Confirm AND move-in in one step
         $booking->update([
-            'status' => 'confirmed',
+            'status' => 'occupied',
             'admin_notes' => $request->admin_notes,
         ]);
 
-        // When booking is confirmed, user is no longer occupying the room
-        // Room remains available for new bookings
+        // Update room to occupied (store original capacity once)
         $room = $booking->room;
+        if (!$room->original_capacity) {
+            $room->update(['original_capacity' => $room->capacity]);
+        }
         $room->update([
-            'status' => 'available',
-            'capacity' => $room->original_capacity ?? $room->capacity // Restore original capacity
+            'status' => 'occupied',
+            'capacity' => 1,
         ]);
 
-        // User remains as seeker and needs to book again
-        // No role change to tenant
+        // Promote user to tenant if still seeker
+        if ($booking->user->role === 'seeker') {
+            $booking->user->becomeTenant();
+        }
 
-        return redirect()->back()->with('success', 'Booking berhasil dikonfirmasi. User perlu melakukan booking baru untuk menempati kamar.');
+        return redirect()->back()->with('success', 'Booking dikonfirmasi dan penghuni langsung dipindahkan ke kamar.');
     }
 
     /**
@@ -279,33 +285,6 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'User berhasil dipindahkan ke kamar dan menjadi penghuni.');
     }
 
-    /**
-     * Vacate room (simple room status update)
-     */
-    public function vacateRoom(Room $room)
-    {
-        // Only occupied rooms can be vacated
-        if ($room->status !== 'occupied') {
-            return redirect()->back()
-                           ->withErrors(['room' => 'Hanya kamar yang terisi yang dapat dikosongkan.']);
-        }
-
-        // Update room status to available and set capacity to 0
-        $room->update([
-            'status' => 'available',
-            'capacity' => 0
-        ]);
-
-        // Update any active bookings for this room to completed
-        $room->bookings()
-             ->where('status', 'occupied')
-             ->update([
-                 'status' => 'completed',
-                 'check_out_date' => now()
-             ]);
-
-        return redirect()->back()->with('success', 'Kamar berhasil dikosongkan. Status kamar diubah menjadi tersedia dan kapasitas diatur menjadi 0.');
-    }
 
     /**
      * Reject booking
@@ -324,31 +303,6 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Booking berhasil ditolak.');
     }
 
-    /**
-     * Complete booking (penghuni keluar/pindah)
-     */
-public function completeBooking(Request $request, Booking $booking)
-    {
-        $request->validate([
-            'admin_notes' => 'nullable|string|max:500',
-        ]);
-
-        // Update booking status to completed
-        $booking->update([
-            'status' => 'completed',
-            'admin_notes' => $request->admin_notes,
-            'check_out_date' => now(),
-        ]);
-
-        // Update room status to available and set capacity to 0 (kosong)
-        $room = $booking->room;
-        $room->update([
-            'status' => 'available',
-            'capacity' => 0 // Set to 0 when completed (kosong)
-        ]);
-
-        return redirect()->back()->with('success', 'Booking berhasil diselesaikan. Kamar telah tersedia kembali dan kapasitas diatur menjadi 0.');
-    }
 
     /**
      * Display bills management
@@ -367,9 +321,13 @@ public function completeBooking(Request $request, Booking $booking)
      */
     public function showCreateBillForm()
     {
+        // Get users with role 'tenant' who have occupied bookings (currently living in rooms)
         $tenants = User::where('role', 'tenant')
+                      ->whereHas('bookings', function($query) {
+                          $query->where('status', 'occupied');
+                      })
                       ->with(['bookings' => function($query) {
-                          $query->where('status', 'confirmed')
+                          $query->where('status', 'occupied')
                                 ->with('room');
                       }])
                       ->get();
@@ -382,28 +340,59 @@ public function completeBooking(Request $request, Booking $booking)
      */
     public function createBill(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'room_id' => 'required|exists:rooms,id',
-            'month' => 'required|integer|between:1,12',
-            'year' => 'required|integer|min:2024',
-            'amount' => 'required|numeric|min:0',
-            'due_date' => 'required|date|after:today',
-        ]);
+        try {
+            \Log::info('Creating bill with data:', $request->all());
+            
+            $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'room_id' => 'required|exists:rooms,id',
+                'amount' => 'required|numeric|min:0',
+                'due_date' => 'required|date|after_or_equal:' . date('Y-m-d'),
+            ]);
 
-        $bill = Bill::create([
-            'user_id' => $request->user_id,
-            'room_id' => $request->room_id,
-            'month' => $request->month,
-            'year' => $request->year,
-            'amount' => $request->amount,
-            'total_amount' => $request->amount,
-            'due_date' => $request->due_date,
-            'status' => 'pending',
-        ]);
+            // Check if room exists and is available
+            $room = Room::find($request->room_id);
+            if (!$room) {
+                return redirect()->back()
+                                ->withInput()
+                                ->with('error', 'Kamar yang dipilih tidak ditemukan.');
+            }
+            
+            // Check if user exists and is a tenant
+            $user = User::find($request->user_id);
+            if (!$user) {
+                return redirect()->back()
+                                ->withInput()
+                                ->with('error', 'Penghuni yang dipilih tidak ditemukan.');
+            }
+            
+            // Ensure user is a tenant
+            if ($user->role !== 'tenant') {
+                return redirect()->back()
+                                ->withInput()
+                                ->with('error', 'Hanya penghuni (tenant) yang dapat ditagih.');
+            }
 
-        return redirect()->route('admin.bills')
-                        ->with('success', 'Tagihan berhasil dibuat.');
+            $dueDate = \Carbon\Carbon::parse($request->due_date);
+            $bill = Bill::create([
+                'user_id' => $request->user_id,
+                'room_id' => $request->room_id,
+                'month' => $dueDate->month,
+                'year' => $dueDate->year,
+                'amount' => $request->amount,
+                'total_amount' => $request->amount,
+                'due_date' => $request->due_date,
+                'status' => 'pending',
+            ]);
+
+            return redirect()->route('admin.bills')
+                            ->with('success', 'Tagihan berhasil dibuat.');
+        } catch (\Exception $e) {
+            \Log::error('Error creating bill: ' . $e->getMessage());
+            return redirect()->back()
+                            ->withInput()
+                            ->with('error', 'Terjadi kesalahan saat membuat tagihan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -414,6 +403,59 @@ public function completeBooking(Request $request, Booking $booking)
         $bill->load(['user', 'room', 'payments']);
         
         return view('admin.bill-detail', compact('bill'));
+    }
+
+    /**
+     * Show edit bill form
+     */
+    public function showEditBillForm(Bill $bill)
+    {
+        // Prevent editing if already paid with verified payment
+        if ($bill->status === 'paid') {
+            return redirect()->route('admin.bills.detail', $bill)
+                            ->with('error', 'Tagihan yang sudah dibayar tidak dapat diedit.');
+        }
+        $bill->load(['user', 'room']);
+        return view('admin.edit-bill', compact('bill'));
+    }
+
+    /**
+     * Update bill
+     */
+    public function updateBill(Request $request, Bill $bill)
+    {
+        // If bill is already paid, block updates (to keep accounting integrity)
+        if ($bill->status === 'paid') {
+            return redirect()->route('admin.bills.detail', $bill)
+                            ->with('error', 'Tagihan yang sudah dibayar tidak dapat diperbarui.');
+        }
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0',
+            'due_date' => 'required|date',
+            'status' => 'required|in:pending,overdue,paid',
+        ]);
+
+        $dueDate = \Carbon\Carbon::parse($request->due_date);
+        $updateData = [
+            'amount' => $request->amount,
+            'total_amount' => $request->amount,
+            'due_date' => $request->due_date,
+            'month' => $dueDate->month,
+            'year' => $dueDate->year,
+            'status' => $request->status,
+        ];
+
+        if ($request->status === 'paid') {
+            $updateData['paid_at'] = now();
+        } else {
+            $updateData['paid_at'] = null;
+        }
+
+        $bill->update($updateData);
+
+        return redirect()->route('admin.bills')
+                        ->with('success', 'Tagihan berhasil diperbarui.');
     }
 
     /**
@@ -530,18 +572,13 @@ public function completeBooking(Request $request, Booking $booking)
     public function updateComplaintStatus(Request $request, Complaint $complaint)
     {
         $request->validate([
-            'status' => 'required|in:new,in_progress,resolved,closed',
-            'priority' => 'nullable|in:low,medium,high,urgent',
+            'status' => 'required|in:new,in_progress,resolved',
             'admin_response' => 'nullable|string|max:1000',
         ]);
 
         $data = [
             'status' => $request->status,
         ];
-
-        if ($request->filled('priority')) {
-            $data['priority'] = $request->priority;
-        }
 
         if ($request->filled('admin_response')) {
             $data['admin_response'] = $request->admin_response;
@@ -557,47 +594,27 @@ public function completeBooking(Request $request, Booking $booking)
     }
 
     /**
+     * Delete complaint
+     */
+    public function deleteComplaint(Complaint $complaint)
+    {
+        // Hapus keluhan. Jika ada kebutuhan audit, bisa diubah ke soft delete.
+        $complaint->delete();
+        return redirect()->route('admin.complaints')->with('success', 'Keluhan berhasil dihapus.');
+    }
+
+    /**
      * Display tenants management
      */
-    public function tenants(Request $request)
+    public function tenants()
     {
-        $query = User::where('role', 'tenant');
+        // Hanya tampilkan tenant yang belum dihapus (soft delete)
+        $tenants = User::where('role', 'tenant')
+                      ->whereNull('deleted_at')
+                      ->withCount(['bookings', 'bills', 'complaints'])
+                      ->paginate(15);
 
-        // Apply search filter
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        // Apply status filter
-        if ($request->filled('status')) {
-            if ($request->status === 'active') {
-                $query->whereHas('bookings', function($q) {
-                    $q->where('status', 'confirmed');
-                });
-            } elseif ($request->status === 'inactive') {
-                $query->whereDoesntHave('bookings', function($q) {
-                    $q->where('status', 'confirmed');
-                });
-            }
-        }
-
-        // Apply room filter
-        if ($request->filled('room')) {
-            $query->whereHas('bookings', function($q) use ($request) {
-                $q->where('room_id', $request->room)
-                  ->where('status', 'confirmed');
-            });
-        }
-
-        $tenants = $query->withCount(['bookings', 'bills', 'complaints'])
-                         ->paginate(15);
-        $rooms = Room::orderBy('room_number')->get();
-
-        return view('admin.tenants', compact('tenants', 'rooms'));
+        return view('admin.tenants', compact('tenants'));
     }
 
     /**
@@ -611,34 +628,98 @@ public function completeBooking(Request $request, Booking $booking)
     }
 
     /**
-     * Delete tenant permanently
+     * Delete tenant (soft delete)
+     * Otomatis menyelesaikan booking yang masih occupied sebelum nonaktifkan
      */
     public function deleteTenant(User $tenant)
     {
-        // Check if tenant has active bookings (confirmed status only)
-        $activeBooking = $tenant->bookings()->where('status', 'confirmed')->first();
-        if ($activeBooking) {
-            return redirect()->route('admin.tenants')
-                            ->with('error', 'Tidak dapat menghapus penghuni yang masih memiliki booking aktif. Silakan selesaikan booking terlebih dahulu dengan menandai booking sebagai "Selesai" di halaman Kelola Booking.');
+        // Otomatis selesaikan booking yang masih occupied
+        $occupiedBookings = $tenant->bookings()
+            ->where('status', 'occupied')
+            ->get();
+        
+        foreach ($occupiedBookings as $booking) {
+            // Update booking status to completed
+            $booking->update([
+                'status' => 'completed',
+                'check_out_date' => now(),
+                'admin_notes' => ($booking->admin_notes ? $booking->admin_notes . "\n\n" : '') . '[Otomatis diselesaikan saat nonaktifkan penghuni]',
+            ]);
+
+            // Update room status to available and set capacity to 0
+            $room = $booking->room;
+            $room->update([
+                'status' => 'available',
+                'capacity' => 0,
+            ]);
+        }
+
+        // Check if tenant has confirmed bookings (belum masuk kamar)
+        $confirmedBookings = $tenant->bookings()
+            ->where('status', 'confirmed')
+            ->count();
+        
+        if ($confirmedBookings > 0) {
+            // Cancel confirmed bookings yang belum masuk kamar
+            $confirmedBookingList = $tenant->bookings()
+                ->where('status', 'confirmed')
+                ->get();
+            
+            foreach ($confirmedBookingList as $booking) {
+                $booking->update([
+                    'status' => 'cancelled',
+                    'admin_notes' => ($booking->admin_notes ? $booking->admin_notes . "\n\n" : '') . '[Dibatalkan saat nonaktifkan penghuni]',
+                ]);
+            }
         }
 
         // Check if tenant has unpaid bills
         $unpaidBills = $tenant->bills()->where('status', 'pending')->count();
         if ($unpaidBills > 0) {
             return redirect()->route('admin.tenants')
-                            ->with('error', 'Tidak dapat menghapus penghuni yang masih memiliki tagihan belum dibayar.');
+                            ->with('error', 'Tidak dapat menonaktifkan penghuni yang masih memiliki tagihan belum dibayar. Silakan selesaikan tagihan terlebih dahulu.');
         }
 
-        // Delete all related data first (cascade delete)
-        $tenant->bookings()->delete();
-        $tenant->bills()->delete();
-        $tenant->complaints()->delete();
+        // Soft delete bookings yang belum completed/rejected/cancelled (pending)
+        // Pertahankan booking yang sudah completed untuk riwayat
+        $tenant->bookings()
+            ->where('status', 'pending')
+            ->delete();
+
+        // Hanya hapus bills yang belum dibayar (pending)
+        // PERTAHANKAN bills yang sudah paid untuk keperluan akuntansi/riwayat
+        $tenant->bills()
+            ->where('status', 'pending')
+            ->delete();
+
+        // Soft delete complaints yang belum resolved
+        // Pertahankan complaints yang sudah resolved untuk riwayat
+        $tenant->complaints()
+            ->where('status', '!=', 'resolved')
+            ->delete();
         
-        // Finally delete the tenant
-        $tenant->forceDelete();
+        // Revert user's role to seeker when tenant is deactivated
+        if ($tenant->role === 'tenant') {
+            $tenant->update(['role' => 'seeker']);
+        }
+        
+        // Soft delete the tenant (data tidak hilang permanen, bisa dikembalikan)
+        $tenant->delete();
+
+        $message = 'Penghuni berhasil dinonaktifkan.';
+        if ($occupiedBookings->count() > 0) {
+            $message .= ' ' . $occupiedBookings->count() . ' booking yang sedang aktif telah otomatis diselesaikan dan kamar tersedia kembali.';
+        }
+        $message .= ' Data riwayat pembayaran dan transaksi penting tetap tersimpan untuk keperluan akuntansi.';
+
+        // Redirect ke halaman booking jika dipanggil dari booking detail
+        if (request()->has('redirect_to') && request()->redirect_to === 'booking' && request()->has('booking_id')) {
+            return redirect()->route('admin.bookings.detail', request()->booking_id)
+                            ->with('success', $message);
+        }
 
         return redirect()->route('admin.tenants')
-                        ->with('success', 'Penghuni dan semua data terkait berhasil dihapus secara permanen.');
+                        ->with('success', $message);
     }
 
 }

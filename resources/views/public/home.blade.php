@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Beranda - Kos Kosan HJ Kastim')
+@section('title', 'Beranda - Kos Kosan H.Kastim')
 
 @section('content')
 <div class="container-fluid">
     <!-- Hero Section -->
     <div class="row bg-primary text-white py-5">
         <div class="col-12 text-center">
-            <h1 class="display-4 fw-bold">Selamat Datang di Kos Kosan HJ Kastim</h1>
+            <h1 class="display-4 fw-bold">Selamat Datang di Kos Kosan H.Kastim</h1>
         </div>
     </div>
 
@@ -15,7 +15,7 @@
     <div class="row py-4">
         <div class="col-12">
             <h2 class="mb-4">
-                <i class="fas fa-bed me-2"></i>Kamar Tersedia
+                <i class="fas fa-bed me-2"></i>Daftar Kamar
             </h2>
         </div>
     </div>
@@ -47,7 +47,11 @@
                             
                             <div class="d-flex justify-content-between align-items-center">
                                 <h4 class="text-primary mb-0">Rp {{ number_format($room->price, 0, ',', '.') }}/bulan</h4>
-                                <span class="badge bg-success status-badge">Tersedia</span>
+                                @php
+                                    $statusClass = $room->status === 'available' ? 'success' : ($room->status === 'occupied' ? 'warning' : 'danger');
+                                    $statusLabel = $room->status === 'available' ? 'Tersedia' : ($room->status === 'occupied' ? 'Terisi' : 'Perawatan');
+                                @endphp
+                                <span class="badge bg-{{ $statusClass }} status-badge">{{ $statusLabel }}</span>
                             </div>
                         </div>
                     </div>
@@ -57,17 +61,23 @@
                             <a href="{{ route('public.room.detail', $room) }}" class="btn btn-outline-primary">
                                 <i class="fas fa-eye me-2"></i>Lihat Detail
                             </a>
-                            @auth
-                                @if(auth()->user()->isSeeker() || auth()->user()->isTenant())
-                                    <a href="{{ route('booking.form', $room) }}" class="btn btn-primary">
-                                        <i class="fas fa-calendar-plus me-2"></i>Booking Sekarang
+                            @if($room->status === 'available')
+                                @auth
+                                    @if(auth()->user()->isSeeker() || auth()->user()->isTenant())
+                                        <a href="{{ route('seeker.booking.form', $room) }}" class="btn btn-primary">
+                                            <i class="fas fa-calendar-plus me-2"></i>Booking Sekarang
+                                        </a>
+                                    @endif
+                                @else
+                                    <a href="{{ route('seeker.booking.form', $room) }}" class="btn btn-primary">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Booking Sekarang
                                     </a>
-                                @endif
+                                @endauth
                             @else
-                                <a href="{{ route('login') }}" class="btn btn-primary">
-                                    <i class="fas fa-sign-in-alt me-2"></i>Login untuk Booking
-                                </a>
-                            @endauth
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="fas fa-ban me-2"></i>Tidak Tersedia
+                                </button>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -76,7 +86,7 @@
             <div class="col-12">
                 <div class="text-center py-5">
                     <i class="fas fa-bed fa-4x text-muted mb-3"></i>
-                    <h4 class="text-muted">Tidak ada kamar tersedia</h4>
+                    <h4 class="text-muted">Belum ada data kamar</h4>
                     <p class="text-muted">Silakan hubungi admin untuk informasi lebih lanjut.</p>
                 </div>
             </div>

@@ -44,46 +44,6 @@
                     </h2>
                 </div>
 
-                <!-- Filter Section -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <form method="GET" action="{{ route('admin.payments') }}" class="row g-3">
-                            <div class="col-md-3">
-                                <label for="status" class="form-label">Status Pembayaran</label>
-                                <select name="status" id="status" class="form-select">
-                                    <option value="">Semua Status</option>
-                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Menunggu Verifikasi</option>
-                                    <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Terverifikasi</option>
-                                    <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="payment_method" class="form-label">Metode Pembayaran</label>
-                                <select name="payment_method" id="payment_method" class="form-select">
-                                    <option value="">Semua Metode</option>
-                                    <option value="transfer" {{ request('payment_method') == 'transfer' ? 'selected' : '' }}>Transfer Bank</option>
-                                    <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>Tunai</option>
-                                    <option value="other" {{ request('payment_method') == 'other' ? 'selected' : '' }}>Lainnya</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="date_from" class="form-label">Tanggal Dari</label>
-                                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request('date_from') }}">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">&nbsp;</label>
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-search me-2"></i>Filter
-                                    </button>
-                                    <a href="{{ route('admin.payments') }}" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times me-2"></i>Reset
-                                    </a>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
                 <!-- Payments Table -->
                 <div class="card">
@@ -100,7 +60,6 @@
                                         <tr>
                                             <th>No. Pembayaran</th>
                                             <th>Penghuni</th>
-                                            <th>Tagihan</th>
                                             <th>Jumlah</th>
                                             <th>Metode</th>
                                             <th>Tanggal Bayar</th>
@@ -114,30 +73,35 @@
                                                 <td>
                                                     <strong>#{{ $payment->id }}</strong>
                                                     <br>
-                                                    <small class="text-muted">{{ $payment->created_at->format('d M Y H:i') }}</small>
+                                                    <small class="text-muted">{{ $payment->created_at ? $payment->created_at->format('d M Y H:i') : 'N/A' }}</small>
                                                 </td>
                                                 <td>
                                                     <div>
-                                                        <strong>{{ $payment->user->name }}</strong>
+                                                        <strong>{{ $payment->user ? $payment->user->name : 'User tidak ditemukan' }}</strong>
                                                         <br>
-                                                        <small class="text-muted">{{ $payment->user->email }}</small>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div>
-                                                        <strong>Tagihan #{{ $payment->bill->id }}</strong>
-                                                        <br>
-                                                        <small class="text-muted">{{ \Carbon\Carbon::create()->month($payment->bill->month)->format('F') }} {{ $payment->bill->year }}</small>
+                                                        <small class="text-muted">{{ $payment->user ? $payment->user->email : 'N/A' }}</small>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <strong>Rp {{ number_format($payment->amount, 0, ',', '.') }}</strong>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-info">{{ ucfirst($payment->payment_method) }}</span>
+                                                    @if($payment->payment_method === 'bank_transfer')
+                                                        <span class="badge bg-primary">Transfer Bank</span>
+                                                    @elseif($payment->payment_method === 'dana')
+                                                        <span class="badge bg-info">DANA</span>
+                                                    @elseif($payment->payment_method === 'gopay')
+                                                        <span class="badge bg-success">GoPay</span>
+                                                    @elseif($payment->payment_method === 'cash')
+                                                        <span class="badge bg-success">Tunai</span>
+                                                    @elseif($payment->payment_method === 'e_wallet')
+                                                        <span class="badge bg-info">E-Wallet</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">{{ ucfirst($payment->payment_method) }}</span>
+                                                    @endif
                                                 </td>
                                                 <td>
-                                                    {{ $payment->payment_date ? $payment->payment_date->format('d M Y') : '-' }}
+                                                    {{ $payment->created_at ? $payment->created_at->format('d M Y') : '-' }}
                                                 </td>
                                                 <td>
                                                     @if($payment->status === 'verified')
@@ -153,14 +117,6 @@
                                                         <button class="btn btn-sm btn-outline-info" onclick="viewPayment({{ $payment->id }})" title="Lihat Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
-                                                        @if($payment->status === 'pending')
-                                                            <button class="btn btn-sm btn-outline-success" onclick="verifyPayment({{ $payment->id }})" title="Verifikasi">
-                                                                <i class="fas fa-check"></i>
-                                                            </button>
-                                                            <button class="btn btn-sm btn-outline-danger" onclick="rejectPayment({{ $payment->id }})" title="Tolak">
-                                                                <i class="fas fa-times"></i>
-                                                            </button>
-                                                        @endif
                                                     </div>
                                                 </td>
                                             </tr>

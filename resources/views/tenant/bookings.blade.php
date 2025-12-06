@@ -63,7 +63,6 @@
                                             <th>ID</th>
                                             <th>Kamar</th>
                                             <th>Tanggal Masuk</th>
-                                            <th>Booking Fee</th>
                                             <th>Status</th>
                                             <th>Tanggal Booking</th>
                                             <th>Aksi</th>
@@ -81,11 +80,6 @@
                                                     </div>
                                                 </td>
                                                 <td>{{ $booking->move_in_date ? $booking->move_in_date->format('d/m/Y') : '-' }}</td>
-                                                <td>
-                                                    <span class="fw-bold text-success">
-                                                        Rp {{ number_format($booking->booking_fee, 0, ',', '.') }}
-                                                    </span>
-                                                </td>
                                                 <td>
                                                     @switch($booking->status)
                                                         @case('pending')
@@ -121,13 +115,6 @@
                                                                     <i class="fas fa-times"></i> Batal
                                                                 </button>
                                                             </form>
-                                                        @endif
-                                                        
-                                                        @if($booking->status === 'pending' && !$booking->payment_proof)
-                                                            <a href="{{ route('bookings.show', $booking) }}" 
-                                                               class="btn btn-sm btn-warning">
-                                                                <i class="fas fa-upload"></i> Upload Bukti
-                                                            </a>
                                                         @endif
                                                     </div>
                                                 </td>

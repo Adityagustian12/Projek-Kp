@@ -44,21 +44,12 @@
                         <h2 class="mb-0">
                             <i class="fas fa-user me-2"></i>Detail Penghuni: {{ $tenant->name }}
                         </h2>
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('admin.tenants') }}">Kelola Penghuni</a></li>
-                                <li class="breadcrumb-item active">Detail Penghuni</li>
-                            </ol>
-                        </nav>
+                        
                     </div>
                     <div>
-                        <a href="{{ route('admin.tenants') }}" class="btn btn-outline-secondary me-2">
+                        <a href="{{ route('admin.tenants') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Kembali
                         </a>
-                        <button class="btn btn-warning" onclick="editTenant({{ $tenant->id }})">
-                            <i class="fas fa-edit me-2"></i>Edit Data
-                        </button>
                     </div>
                 </div>
 
@@ -105,7 +96,12 @@
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <strong>Jenis Kelamin:</strong>
-                                                <p class="text-muted mb-0">{{ $tenant->gender ? ucfirst($tenant->gender) : 'Tidak ada' }}</p>
+                                                <p class="text-muted mb-0">
+                                                    @php
+                                                        $genderMap = ['male' => 'Laki-laki', 'female' => 'Perempuan'];
+                                                    @endphp
+                                                    {{ $tenant->gender ? ($genderMap[$tenant->gender] ?? ucfirst($tenant->gender)) : 'Tidak ada' }}
+                                                </p>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <strong>Pekerjaan:</strong>
@@ -197,27 +193,6 @@
 
                     <!-- Sidebar -->
                     <div class="col-lg-4">
-                        <!-- Quick Actions -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-bolt me-2"></i>Aksi Cepat
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-warning" onclick="editTenant({{ $tenant->id }})">
-                                        <i class="fas fa-edit me-2"></i>Edit Data Penghuni
-                                    </button>
-                                    <button class="btn btn-info" onclick="viewTenantHistory({{ $tenant->id }})">
-                                        <i class="fas fa-history me-2"></i>Lihat Riwayat
-                                    </button>
-                                    <button class="btn btn-primary" onclick="createBill({{ $tenant->id }})">
-                                        <i class="fas fa-file-invoice me-2"></i>Buat Tagihan
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Statistics -->
                         <div class="card mb-4">
@@ -296,9 +271,27 @@
                                             <small class="text-muted">{{ $activity['date']->format('d M Y H:i') }}</small>
                                         </div>
                                         <div class="flex-shrink-0">
-                                            <span class="badge bg-{{ $activity['color'] }}">
-                                                {{ ucfirst($activity['status']) }}
-                                            </span>
+                                            @php
+                                                $label = $activity['status'];
+                                                if ($activity['type'] === 'booking') {
+                                                    $label = [
+                                                        'pending' => 'Menunggu',
+                                                        'confirmed' => 'Dikonfirmasi',
+                                                        'rejected' => 'Ditolak',
+                                                        'occupied' => 'Terisi',
+                                                        'completed' => 'Selesai',
+                                                        'cancelled' => 'Dibatalkan',
+                                                    ][$activity['status']] ?? ucfirst($activity['status']);
+                                                } else {
+                                                    $label = [
+                                                        'new' => 'Baru',
+                                                        'in_progress' => 'Diproses',
+                                                        'resolved' => 'Selesai',
+                                                        'closed' => 'Ditutup',
+                                                    ][$activity['status']] ?? ucfirst($activity['status']);
+                                                }
+                                            @endphp
+                                            <span class="badge bg-{{ $activity['color'] }}">{{ $label }}</span>
                                         </div>
                                     </div>
                                 @empty
@@ -360,15 +353,7 @@
 </style>
 
 <script>
-function editTenant(tenantId) {
-    // Implementasi edit tenant
-    alert('Fitur edit data penghuni akan segera tersedia!');
-}
-
-function viewTenantHistory(tenantId) {
-    // Implementasi view tenant history
-    alert('Fitur riwayat penghuni akan segera tersedia!');
-}
+// fungsi edit dan riwayat dihapus sesuai permintaan
 
 function createBill(tenantId) {
     // Redirect to create bill with tenant pre-selected

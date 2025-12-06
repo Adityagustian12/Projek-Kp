@@ -32,55 +32,6 @@
                     </h2>
                 </div>
 
-                <!-- Filter Section -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <form method="GET" action="{{ route('tenant.bills') }}" class="row g-3">
-                            <div class="col-md-3">
-                                <label for="status" class="form-label">Status Tagihan</label>
-                                <select name="status" id="status" class="form-select">
-                                    <option value="">Semua Status</option>
-                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Belum Dibayar</option>
-                                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Sudah Dibayar</option>
-                                    <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Terlambat</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="month" class="form-label">Bulan</label>
-                                <select name="month" id="month" class="form-select">
-                                    <option value="">Semua Bulan</option>
-                                    @for($i = 1; $i <= 12; $i++)
-                                        <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
-                                            {{ \Carbon\Carbon::create()->month($i)->format('F') }}
-                                        </option>
-                                    @endfor
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="year" class="form-label">Tahun</label>
-                                <select name="year" id="year" class="form-select">
-                                    <option value="">Semua Tahun</option>
-                                    @for($i = date('Y'); $i >= date('Y') - 2; $i--)
-                                        <option value="{{ $i }}" {{ request('year') == $i ? 'selected' : '' }}>
-                                            {{ $i }}
-                                        </option>
-                                    @endfor
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">&nbsp;</label>
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-search me-2"></i>Filter
-                                    </button>
-                                    <a href="{{ route('tenant.bills') }}" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times me-2"></i>Reset
-                                    </a>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
                 <!-- Bills Table -->
                 <div class="card">
@@ -134,13 +85,19 @@
                                                         <strong>{{ \Carbon\Carbon::parse($bill->due_date)->format('d M Y') }}</strong>
                                                         @if($bill->status === 'overdue')
                                                             <br>
+                                                            @php
+                                                                $daysLate = \Carbon\Carbon::parse($bill->due_date)->startOfDay()->diffInDays(now()->startOfDay(), false);
+                                                            @endphp
                                                             <small class="text-danger">
-                                                                Terlambat {{ \Carbon\Carbon::parse($bill->due_date)->diffInDays(now()) }} hari
+                                                                Terlambat {{ max(0, (int) $daysLate) }} hari
                                                             </small>
                                                         @elseif($bill->status === 'pending')
                                                             <br>
+                                                            @php
+                                                                $daysLeft = \Carbon\Carbon::now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($bill->due_date)->startOfDay(), false);
+                                                            @endphp
                                                             <small class="text-warning">
-                                                                {{ \Carbon\Carbon::parse($bill->due_date)->diffInDays(now()) }} hari lagi
+                                                                {{ $daysLeft > 0 ? (int) $daysLeft . ' hari lagi' : 'Hari ini jatuh tempo' }}
                                                             </small>
                                                         @endif
                                                     </div>

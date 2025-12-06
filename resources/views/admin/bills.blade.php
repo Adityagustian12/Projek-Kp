@@ -49,53 +49,6 @@
                     </div>
                 </div>
 
-                <!-- Filter Section -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <form method="GET" action="{{ route('admin.bills') }}" class="row g-3">
-                            <div class="col-md-3">
-                                <label for="status" class="form-label">Status Tagihan</label>
-                                <select name="status" id="status" class="form-select">
-                                    <option value="">Semua Status</option>
-                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Belum Dibayar</option>
-                                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Sudah Dibayar</option>
-                                    <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Terlambat</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="month" class="form-label">Bulan</label>
-                                <select name="month" id="month" class="form-select">
-                                    <option value="">Semua Bulan</option>
-                                    @for($i = 1; $i <= 12; $i++)
-                                        <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
-                                            {{ \Carbon\Carbon::create()->month($i)->format('F') }}
-                                        </option>
-                                    @endfor
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="year" class="form-label">Tahun</label>
-                                <select name="year" id="year" class="form-select">
-                                    <option value="">Semua Tahun</option>
-                                    @for($i = date('Y'); $i >= 2020; $i--)
-                                        <option value="{{ $i }}" {{ request('year') == $i ? 'selected' : '' }}>{{ $i }}</option>
-                                    @endfor
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">&nbsp;</label>
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-search me-2"></i>Filter
-                                    </button>
-                                    <a href="{{ route('admin.bills') }}" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times me-2"></i>Reset
-                                    </a>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
                 <!-- Bills Table -->
                 <div class="card">
@@ -126,17 +79,17 @@
                                                 <td>
                                                     <strong>#{{ $bill->id }}</strong>
                                                     <br>
-                                                    <small class="text-muted">{{ $bill->created_at->format('d M Y') }}</small>
+                                                    <small class="text-muted">{{ $bill->created_at ? $bill->created_at->format('d M Y') : 'N/A' }}</small>
                                                 </td>
                                                 <td>
                                                     <div>
-                                                        <strong>{{ $bill->user->name }}</strong>
+                                                        <strong>{{ $bill->user ? $bill->user->name : 'User tidak ditemukan' }}</strong>
                                                         <br>
-                                                        <small class="text-muted">{{ $bill->user->email }}</small>
+                                                        <small class="text-muted">{{ $bill->user ? $bill->user->email : 'N/A' }}</small>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-info">{{ $bill->room->room_number }}</span>
+                                                    <span class="badge bg-info">{{ $bill->room ? $bill->room->room_number : 'Kamar tidak ditemukan' }}</span>
                                                 </td>
                                                 <td>
                                                     {{ \Carbon\Carbon::create()->month($bill->month)->format('F') }} {{ $bill->year }}
@@ -145,14 +98,14 @@
                                                     <strong>Rp {{ number_format($bill->total_amount, 0, ',', '.') }}</strong>
                                                 </td>
                                                 <td>
-                                                    <span class="{{ $bill->due_date < now() && $bill->status !== 'paid' ? 'text-danger' : '' }}">
-                                                        {{ $bill->due_date->format('d M Y') }}
+                                                    <span class="{{ $bill->due_date && $bill->due_date < now() && $bill->status !== 'paid' ? 'text-danger' : '' }}">
+                                                        {{ $bill->due_date ? $bill->due_date->format('d M Y') : 'N/A' }}
                                                     </span>
                                                 </td>
                                                 <td>
                                                     @if($bill->status === 'paid')
                                                         <span class="badge bg-success">Sudah Dibayar</span>
-                                                    @elseif($bill->due_date < now())
+                                                    @elseif($bill->due_date && $bill->due_date < now())
                                                         <span class="badge bg-danger">Terlambat</span>
                                                     @else
                                                         <span class="badge bg-warning">Belum Dibayar</span>
@@ -319,8 +272,8 @@ function viewBill(billId) {
 }
 
 function editBill(billId) {
-    // Implementasi edit bill
-    alert('Fitur edit tagihan akan segera tersedia!');
+    // Redirect to edit bill page
+    window.location.href = `/admin/bills/${billId}/edit`;
 }
 
 function deleteBill(billId) {

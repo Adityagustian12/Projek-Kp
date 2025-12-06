@@ -11,10 +11,10 @@ class Booking extends Model
         'room_id',
         'check_in_date',
         'check_out_date',
-        'booking_fee',
         'status',
         'documents',
         'payment_proof',
+        'dp_amount',
         'notes',
         'admin_notes',
     ];
@@ -22,8 +22,9 @@ class Booking extends Model
     protected $casts = [
         'check_in_date' => 'date',
         'check_out_date' => 'date',
-        'booking_fee' => 'decimal:2',
         'documents' => 'array',
+        'payment_proof' => 'array',
+        'dp_amount' => 'decimal:2',
     ];
 
     /**

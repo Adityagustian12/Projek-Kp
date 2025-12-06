@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Login - Kos-Kosan Management')
+@section('title', 'Login - Kos-Kosan H.Kastim')
 
 @section('content')
 <div class="container">
@@ -70,9 +70,7 @@
                     </form>
 
                     <div class="text-center mt-4">
-                        <p class="text-muted">
-                            Belum punya akun? Hubungi admin untuk membuat akun baru.
-                        </p>
+                        <p class="text-muted">Belum punya akun? <a href="{{ route('register') }}" class="text-decoration-none">Daftar di sini</a>.</p>
                     </div>
                 </div>
             </div>

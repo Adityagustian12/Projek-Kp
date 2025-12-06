@@ -36,14 +36,17 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
-            
-            // Redirect based on user role
-            return match($user->role) {
-                'admin' => redirect()->route('admin.dashboard'),
-                'tenant' => redirect()->route('tenant.dashboard'),
-                'seeker' => redirect()->route('seeker.dashboard'),
-                default => redirect()->route('public.home')
+
+            // Use intended URL if present (e.g., user tried to access booking form),
+            // otherwise fallback based on user role
+            $fallback = match ($user->role) {
+                'admin' => route('admin.dashboard'),
+                'tenant' => route('tenant.dashboard'),
+                'seeker' => route('seeker.dashboard'),
+                default => route('public.home'),
             };
+
+            return redirect()->intended($fallback);
         }
 
         return back()->withErrors([
@@ -56,7 +59,7 @@ class AuthController extends Controller
      */
     public function showRegisterForm()
     {
-        return redirect()->route('login')->with('message', 'Fitur pendaftaran tidak tersedia. Silakan hubungi admin untuk membuat akun.');
+        return view('auth.register');
     }
 
     /**
@@ -64,7 +67,25 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        return redirect()->route('login')->with('message', 'Fitur pendaftaran tidak tersedia. Silakan hubungi admin untuk membuat akun.');
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'phone' => $request->phone,
+            'role' => 'seeker',
+        ]);
+
+        Auth::login($user);
+
+        $fallback = route('seeker.dashboard');
+        return redirect()->intended($fallback);
     }
 
     /**

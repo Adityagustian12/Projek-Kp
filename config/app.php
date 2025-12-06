@@ -123,4 +123,28 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Bank Account for DP/Payments
+    |--------------------------------------------------------------------------
+    | Diset melalui ENV agar mudah diubah tanpa edit kode.
+    */
+    'bank' => [
+        'name' => env('BANK_NAME', 'Bank BCA'),
+        'account' => env('BANK_ACCOUNT', '2312335647'),
+        'holder' => env('BANK_HOLDER', 'ADITYA AGUSTIAN'),
+        'note' => env('BANK_NOTE', 'Kirim bukti transfer setelah pembayaran.'),
+    ],
+
+    'ewallets' => [
+        'dana' => [
+            'number' => env('EWALLET_DANA_NUMBER', '081319623603'),
+            'holder' => env('EWALLET_DANA_HOLDER', 'ADITYA AGUSTIAN'),
+        ],
+        'gopay' => [
+            'number' => env('EWALLET_GOPAY_NUMBER', '081319623603'),
+            'holder' => env('EWALLET_GOPAY_HOLDER', 'ADITYA AGUSTIAN'),
+        ],
+    ],
+
 ];

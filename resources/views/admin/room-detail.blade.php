@@ -44,13 +44,7 @@
                         <h2 class="mb-0">
                             <i class="fas fa-bed me-2"></i>Detail Kamar {{ $room->room_number }}
                         </h2>
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('admin.rooms') }}">Kelola Kamar</a></li>
-                                <li class="breadcrumb-item active">Detail Kamar</li>
-                            </ol>
-                        </nav>
+                        
                     </div>
                     <div>
                         <a href="{{ route('admin.rooms') }}" class="btn btn-outline-secondary me-2">
@@ -165,30 +159,6 @@
 
                     <!-- Sidebar -->
                     <div class="col-lg-4">
-                        <!-- Quick Actions -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-bolt me-2"></i>Aksi Cepat
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-warning" onclick="editRoom({{ $room->id }})">
-                                        <i class="fas fa-edit me-2"></i>Edit Kamar
-                                    </button>
-                                    <button class="btn btn-success" onclick="duplicateRoom({{ $room->id }})">
-                                        <i class="fas fa-copy me-2"></i>Duplikasi Kamar
-                                    </button>
-                                    <button class="btn btn-info" onclick="updateRoomStatus({{ $room->id }})">
-                                        <i class="fas fa-sync me-2"></i>Ubah Status
-                                    </button>
-                                    <button class="btn btn-danger" onclick="deleteRoom({{ $room->id }})">
-                                        <i class="fas fa-trash me-2"></i>Hapus Kamar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Statistics -->
                         <div class="card mb-4">

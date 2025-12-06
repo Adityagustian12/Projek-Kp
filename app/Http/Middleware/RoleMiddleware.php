@@ -16,13 +16,20 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, string $role): Response
     {
         if (!auth()->check()) {
-            return redirect()->route('login');
+            return redirect()->route('register');
         }
 
         $user = auth()->user();
         
         if (!$user->role || $user->role !== $role) {
-            abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.');
+            // Redirect to a neutral, non-role-gated route to avoid redirect loops
+            return redirect()->route('public.home')->with('error', 'Akses dialihkan sesuai peran Anda.');
+        }
+
+        // If tenant but no active (occupied) booking, redirect to seeker dashboard
+        if ($role === 'tenant' && method_exists($user, 'hasActiveBooking') && !$user->hasActiveBooking()) {
+            return redirect()->route('public.home')
+                             ->with('error', 'Akses dashboard penghuni dibatasi. Silakan lakukan booking dan pindah ke kamar terlebih dahulu.');
         }
 
         return $next($request);

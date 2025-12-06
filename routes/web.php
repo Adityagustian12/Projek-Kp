@@ -5,16 +5,27 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes (No Authentication Required)
 Route::get('/', [PublicController::class, 'index'])->name('public.home');
 Route::get('/rooms/{room}', [PublicController::class, 'roomDetail'])->name('public.room.detail');
 
+// Dev utility: hard delete a user by email (LOCAL only)
+if (app()->environment('local')) {
+    Route::get('/dev/reset-user/{email}', function ($email) {
+        User::where('email', $email)->forceDelete();
+        return response()->json(['status' => 'ok', 'email' => $email]);
+    });
+}
+
 // Authentication Routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('refresh.csrf');
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -37,13 +48,7 @@ Route::get('/storage/{path}', function ($path) {
 // Protected Routes (Authentication Required)
 Route::middleware('auth')->group(function () {
     
-    // Profile Routes
-    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
-    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    
-    // Booking Routes (for authenticated users)
-    Route::get('/rooms/{room}/booking', [PublicController::class, 'showBookingForm'])->name('booking.form');
-    Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+    // Booking Routes (general authenticated)
     Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('bookings.my');
     Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
     Route::post('/bookings/{booking}/payment-proof', [BookingController::class, 'uploadPaymentProof'])->name('bookings.payment-proof');
@@ -52,6 +57,12 @@ Route::middleware('auth')->group(function () {
     // Seeker Routes
     Route::middleware('role:seeker')->prefix('seeker')->name('seeker.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Seeker\DashboardController::class, 'index'])->name('dashboard');
+        // Booking creation only for seekers
+        Route::get('/rooms/{room}/booking', [PublicController::class, 'showBookingForm'])->name('booking.form');
+        Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+        // DP Payment routes
+        Route::get('/bookings/{booking}/dp-payment', [App\Http\Controllers\Seeker\DashboardController::class, 'showDpPaymentForm'])->name('bookings.dp-payment');
+        Route::post('/bookings/{booking}/dp-payment', [App\Http\Controllers\Seeker\DashboardController::class, 'processDpPayment'])->name('bookings.dp-payment.store');
     });
 
     // Tenant Routes
@@ -83,7 +94,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/rooms/{room}', [AdminDashboardController::class, 'updateRoom'])->name('rooms.update');
         Route::delete('/rooms/{room}', [AdminDashboardController::class, 'deleteRoom'])->name('rooms.delete');
         Route::post('/rooms/{room}/duplicate', [AdminDashboardController::class, 'duplicateRoom'])->name('rooms.duplicate');
-        Route::post('/rooms/{room}/vacate', [AdminDashboardController::class, 'vacateRoom'])->name('rooms.vacate');
         Route::put('/rooms/{room}/status', [AdminDashboardController::class, 'updateRoomStatus'])->name('rooms.status');
         
         // Bookings Management
@@ -92,13 +102,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/bookings/{booking}/confirm', [AdminDashboardController::class, 'confirmBooking'])->name('bookings.confirm');
         Route::post('/bookings/{booking}/move-in', [AdminDashboardController::class, 'moveIntoRoom'])->name('bookings.move-in');
         Route::post('/bookings/{booking}/reject', [AdminDashboardController::class, 'rejectBooking'])->name('bookings.reject');
-        Route::post('/bookings/{booking}/complete', [AdminDashboardController::class, 'completeBooking'])->name('bookings.complete');
         
         // Bills Management
         Route::get('/bills', [AdminDashboardController::class, 'bills'])->name('bills');
         Route::get('/bills/create', [AdminDashboardController::class, 'showCreateBillForm'])->name('bills.create');
         Route::post('/bills', [AdminDashboardController::class, 'createBill'])->name('bills.store');
         Route::get('/bills/{bill}', [AdminDashboardController::class, 'billDetail'])->name('bills.detail');
+        Route::get('/bills/{bill}/edit', [AdminDashboardController::class, 'showEditBillForm'])->name('bills.edit');
+        Route::put('/bills/{bill}', [AdminDashboardController::class, 'updateBill'])->name('bills.update');
         Route::delete('/bills/{bill}', [AdminDashboardController::class, 'deleteBill'])->name('bills.delete');
         
         // Payments Management
@@ -110,6 +121,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/complaints', [AdminDashboardController::class, 'complaints'])->name('complaints');
         Route::get('/complaints/{complaint}', [AdminDashboardController::class, 'complaintDetail'])->name('complaints.detail');
         Route::put('/complaints/{complaint}/status', [AdminDashboardController::class, 'updateComplaintStatus'])->name('complaints.status');
+        Route::delete('/complaints/{complaint}', [AdminDashboardController::class, 'deleteComplaint'])->name('complaints.delete');
         
         // Tenants Management
         Route::get('/tenants', [AdminDashboardController::class, 'tenants'])->name('tenants');

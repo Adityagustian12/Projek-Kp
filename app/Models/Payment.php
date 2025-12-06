@@ -92,6 +92,8 @@ class Payment extends Model
     {
         return match($this->payment_method) {
             'bank_transfer' => 'Transfer Bank',
+            'dana' => 'DANA',
+            'gopay' => 'GoPay',
             'cash' => 'Tunai',
             'e_wallet' => 'E-Wallet',
             'other' => 'Lainnya',

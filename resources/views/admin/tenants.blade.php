@@ -44,48 +44,6 @@
                     </h2>
                 </div>
 
-                <!-- Filter Section -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Filter Penghuni</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="GET" action="{{ route('admin.tenants') }}" class="row g-3">
-                            <div class="col-md-4">
-                                <label for="search" class="form-label">Cari Penghuni</label>
-                                <input type="text" class="form-control" id="search" name="search" 
-                                       value="{{ request('search') }}" placeholder="Nama atau email...">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="status" class="form-label">Status</label>
-                                <select class="form-select" id="status" name="status">
-                                    <option value="">Semua Status</option>
-                                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
-                                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Tidak Aktif</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="room" class="form-label">Kamar</label>
-                                <select class="form-select" id="room" name="room">
-                                    <option value="">Semua Kamar</option>
-                                @foreach($rooms as $room)
-                                    <option value="{{ $room->id }}" {{ request('room') == $room->id ? 'selected' : '' }}>
-                                        {{ $room->room_number }}
-                                    </option>
-                                @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">&nbsp;</label>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-search me-1"></i> Filter
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
                 <!-- Tenants Table -->
                 <div class="card">
@@ -106,7 +64,6 @@
                                             <th>Telepon</th>
                                             <th>Kamar</th>
                                             <th>Tanggal Masuk</th>
-                                            <th>Status</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
@@ -150,7 +107,7 @@
                                                 <td>
                                                     @php
                                                         $currentRoom = $tenant->bookings()
-                                                            ->where('status', 'confirmed')
+                                                            ->where('status', 'occupied')
                                                             ->with('room')
                                                             ->latest()
                                                             ->first();
@@ -170,33 +127,14 @@
                                                         <span class="text-muted">-</span>
                                                     @endif
                                                 </td>
-                                                <td>
-                                                    @php
-                                                        $currentRoom = $tenant->bookings()
-                                                            ->where('status', 'confirmed')
-                                                            ->with('room')
-                                                            ->latest()
-                                                            ->first();
-                                                    @endphp
-                                                    @if($currentRoom)
-                                                        <span class="badge bg-success">Aktif</span>
-                                                    @else
-                                                        <span class="badge bg-secondary">Tidak Aktif</span>
-                                                    @endif
-                                                </td>
+                                                
                                                 <td>
                                                     <div class="btn-group" role="group">
                                                         <button class="btn btn-sm btn-outline-info" onclick="viewTenant({{ $tenant->id }})" title="Lihat Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
-                                                        <button class="btn btn-sm btn-outline-warning" onclick="editTenant({{ $tenant->id }})" title="Edit Data">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-primary" onclick="viewTenantHistory({{ $tenant->id }})" title="Riwayat">
-                                                            <i class="fas fa-history"></i>
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTenant({{ $tenant->id }})" title="Hapus Permanen">
-                                                            <i class="fas fa-trash"></i>
+                                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTenant({{ $tenant->id }})" title="Nonaktifkan Penghuni">
+                                                            <i class="fas fa-user-slash"></i>
                                                         </button>
                                                     </div>
                                                 </td>
@@ -220,10 +158,10 @@
                     </div>
                 </div>
 
-                <!-- Summary Cards -->
+                <!-- Summary Cards (simplified) -->
                 @if($tenants->count() > 0)
                 <div class="row mt-4">
-                    <div class="col-md-3">
+                    <div class="col-md-6 col-lg-3">
                         <div class="card bg-primary text-white">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
@@ -238,37 +176,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card bg-success text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h4 class="mb-0">{{ $tenants->whereNull('deleted_at')->filter(function($tenant) { return $tenant->bookings()->where('status', 'confirmed')->exists(); })->count() }}</h4>
-                                        <p class="mb-0">Penghuni Aktif</p>
-                                    </div>
-                                    <div class="align-self-center">
-                                        <i class="fas fa-user-check fa-2x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-warning text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h4 class="mb-0">{{ $tenants->whereNull('deleted_at')->filter(function($tenant) { return $tenant->bookings()->where('status', 'confirmed')->doesntExist(); })->count() }}</h4>
-                                        <p class="mb-0">Tidak Aktif</p>
-                                    </div>
-                                    <div class="align-self-center">
-                                        <i class="fas fa-user-times fa-2x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
+                    <div class="col-md-6 col-lg-3">
                         <div class="card bg-info text-white">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
@@ -344,28 +252,27 @@ function viewTenant(tenantId) {
     window.location.href = `/admin/tenants/${tenantId}`;
 }
 
-function editTenant(tenantId) {
-    // Implementasi edit tenant
-    alert('Fitur edit data penghuni akan segera tersedia!');
-}
-
-function viewTenantHistory(tenantId) {
-    // Implementasi view tenant history
-    alert('Fitur riwayat penghuni akan segera tersedia!');
-}
+// fungsi edit dan riwayat dihapus sesuai permintaan
 
 function deleteTenant(tenantId) {
-    if (confirm('⚠️ PERINGATAN: Apakah Anda yakin ingin menghapus penghuni ini secara permanen?\n\n' +
-                'Tindakan ini akan menghapus:\n' +
-                '• Data penghuni\n' +
-                '• Semua riwayat booking\n' +
-                '• Semua tagihan\n' +
-                '• Semua keluhan\n\n' +
-                'Tindakan ini TIDAK DAPAT DIBATALKAN!\n\n' +
-                'Ketik "HAPUS" untuk konfirmasi:')) {
+    if (confirm('⚠️ PERINGATAN: Apakah Anda yakin ingin menonaktifkan penghuni ini?\n\n' +
+                'Tindakan ini akan:\n' +
+                '• Menonaktifkan akun penghuni (data tidak hilang permanen)\n' +
+                '• Otomatis menyelesaikan booking yang sedang aktif (kamar akan tersedia kembali)\n' +
+                '• Membatalkan booking yang sudah dikonfirmasi tapi belum masuk kamar\n' +
+                '• Menghapus booking yang masih pending\n' +
+                '• Menghapus tagihan yang belum dibayar\n' +
+                '• Menghapus keluhan yang belum selesai\n' +
+                '• Mengubah role pengguna kembali menjadi "Pencari Kosan"\n\n' +
+                '✅ Data yang DIPERTAHANKAN:\n' +
+                '• Riwayat pembayaran yang sudah dibayar\n' +
+                '• Booking yang sudah selesai (completed)\n' +
+                '• Keluhan yang sudah diselesaikan\n\n' +
+                'Data dapat dikembalikan jika diperlukan.\n\n' +
+                'Ketik "NONAKTIFKAN" untuk konfirmasi:')) {
         
-        const confirmation = prompt('Ketik "HAPUS" untuk konfirmasi penghapusan permanen:');
-        if (confirmation === 'HAPUS') {
+        const confirmation = prompt('Ketik "NONAKTIFKAN" untuk konfirmasi:');
+        if (confirmation === 'NONAKTIFKAN') {
             // Create form and submit
             const form = document.createElement('form');
             form.method = 'POST';
@@ -388,7 +295,7 @@ function deleteTenant(tenantId) {
             document.body.appendChild(form);
             form.submit();
         } else {
-            alert('Penghapusan dibatalkan.');
+            alert('Tindakan dibatalkan.');
         }
     }
 }

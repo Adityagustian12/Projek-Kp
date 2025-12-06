@@ -49,33 +49,6 @@
                     </div>
                 </div>
 
-                <!-- Filter Section -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <form method="GET" action="{{ route('admin.rooms') }}" class="row g-3">
-                            <div class="col-md-3">
-                                <label for="status" class="form-label">Status Kamar</label>
-                                <select name="status" id="status" class="form-select">
-                                    <option value="">Semua Status</option>
-                                    <option value="available" {{ request('status') == 'available' ? 'selected' : '' }}>Tersedia</option>
-                                    <option value="occupied" {{ request('status') == 'occupied' ? 'selected' : '' }}>Terisi</option>
-                                    <option value="maintenance" {{ request('status') == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">&nbsp;</label>
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-search me-2"></i>Filter
-                                    </button>
-                                    <a href="{{ route('admin.rooms') }}" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times me-2"></i>Reset
-                                    </a>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
                 <!-- Rooms Table -->
                 <div class="card">
@@ -133,11 +106,6 @@
                                                         <button class="btn btn-sm btn-outline-success" onclick="duplicateRoom({{ $room->id }})" title="Duplikasi Kamar">
                                                             <i class="fas fa-copy"></i>
                                                         </button>
-                                                        @if($room->status === 'occupied')
-                                                            <button class="btn btn-sm btn-warning" onclick="vacateRoom({{ $room->id }})" title="Kosongkan Kamar">
-                                                                <i class="fas fa-sign-out-alt"></i>
-                                                            </button>
-                                                        @endif
                                                         <button class="btn btn-sm btn-outline-danger" onclick="deleteRoom({{ $room->id }})" title="Hapus Kamar">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
@@ -204,63 +172,17 @@
                             <label for="description" class="form-label">Deskripsi</label>
                             <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                         </div>
+                        
                         <div class="col-12 mb-3">
-                            <label for="facilities" class="form-label">Fasilitas</label>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="AC" id="facility_ac">
-                                        <label class="form-check-label" for="facility_ac">AC</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="WiFi" id="facility_wifi">
-                                        <label class="form-check-label" for="facility_wifi">WiFi</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="Kamar Mandi Dalam" id="facility_bathroom">
-                                        <label class="form-check-label" for="facility_bathroom">Kamar Mandi Dalam</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="Lemari" id="facility_wardrobe">
-                                        <label class="form-check-label" for="facility_wardrobe">Lemari</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="Meja Belajar" id="facility_desk">
-                                        <label class="form-check-label" for="facility_desk">Meja Belajar</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="Kulkas" id="facility_fridge">
-                                        <label class="form-check-label" for="facility_fridge">Kulkas</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="TV" id="facility_tv">
-                                        <label class="form-check-label" for="facility_tv">TV</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="Kipas Angin" id="facility_fan">
-                                        <label class="form-check-label" for="facility_fan">Kipas Angin</label>
-                                    </div>
-                                </div>
+                            <label class="form-label">Upload Detail Kamar</label>
+                            <div class="row g-2">
+                                <div class="col-md-6"><input type="file" class="form-control" id="images_1" name="images[]" accept="image/*"></div>
+                                <div class="col-md-6"><input type="file" class="form-control" id="images_2" name="images[]" accept="image/*"></div>
+                                <div class="col-md-6"><input type="file" class="form-control" id="images_3" name="images[]" accept="image/*"></div>
+                                <div class="col-md-6"><input type="file" class="form-control" id="images_4" name="images[]" accept="image/*"></div>
+                                <div class="col-md-6"><input type="file" class="form-control" id="images_5" name="images[]" accept="image/*"></div>
                             </div>
-                        </div>
-                        <div class="col-12 mb-3">
-                            <label for="images" class="form-label">Gambar Kamar</label>
-                            <input type="file" class="form-control" id="images" name="images[]" multiple accept="image/*">
-                            <div class="form-text">Pilih beberapa gambar untuk kamar ini.</div>
+                            
                         </div>
                     </div>
                 </div>
@@ -310,63 +232,17 @@
                             <label for="edit_description" class="form-label">Deskripsi</label>
                             <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
                         </div>
+                        
                         <div class="col-12 mb-3">
-                            <label for="edit_facilities" class="form-label">Fasilitas</label>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="AC" id="edit_facility_ac">
-                                        <label class="form-check-label" for="edit_facility_ac">AC</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="WiFi" id="edit_facility_wifi">
-                                        <label class="form-check-label" for="edit_facility_wifi">WiFi</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="Kamar Mandi Dalam" id="edit_facility_bathroom">
-                                        <label class="form-check-label" for="edit_facility_bathroom">Kamar Mandi Dalam</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="Lemari" id="edit_facility_wardrobe">
-                                        <label class="form-check-label" for="edit_facility_wardrobe">Lemari</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="Meja Belajar" id="edit_facility_desk">
-                                        <label class="form-check-label" for="edit_facility_desk">Meja Belajar</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="Kulkas" id="edit_facility_fridge">
-                                        <label class="form-check-label" for="edit_facility_fridge">Kulkas</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="TV" id="edit_facility_tv">
-                                        <label class="form-check-label" for="edit_facility_tv">TV</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="facilities[]" value="Kipas Angin" id="edit_facility_fan">
-                                        <label class="form-check-label" for="edit_facility_fan">Kipas Angin</label>
-                                    </div>
-                                </div>
+                            <label class="form-label">Upload Detail Kamar</label>
+                            <div class="row g-2">
+                                <div class="col-md-6"><input type="file" class="form-control" id="edit_images_1" name="images[]" accept="image/*"></div>
+                                <div class="col-md-6"><input type="file" class="form-control" id="edit_images_2" name="images[]" accept="image/*"></div>
+                                <div class="col-md-6"><input type="file" class="form-control" id="edit_images_3" name="images[]" accept="image/*"></div>
+                                <div class="col-md-6"><input type="file" class="form-control" id="edit_images_4" name="images[]" accept="image/*"></div>
+                                <div class="col-md-6"><input type="file" class="form-control" id="edit_images_5" name="images[]" accept="image/*"></div>
                             </div>
-                        </div>
-                        <div class="col-12 mb-3">
-                            <label for="edit_images" class="form-label">Gambar Kamar</label>
-                            <input type="file" class="form-control" id="edit_images" name="images[]" multiple accept="image/*">
-                            <div class="form-text">Pilih gambar baru untuk mengganti gambar lama (opsional).</div>
+                            
                         </div>
                     </div>
                 </div>
@@ -446,19 +322,7 @@ function editRoom(roomId) {
     document.getElementById('edit_area').value = room.area || '';
     document.getElementById('edit_description').value = room.description || '';
     
-    // Clear all facility checkboxes first
-    const facilityCheckboxes = document.querySelectorAll('#editRoomModal input[name="facilities[]"]');
-    facilityCheckboxes.forEach(checkbox => checkbox.checked = false);
     
-    // Check facilities that exist
-    if (room.facilities && Array.isArray(room.facilities)) {
-        room.facilities.forEach(facility => {
-            const checkbox = document.querySelector(`#editRoomModal input[value="${facility}"]`);
-            if (checkbox) {
-                checkbox.checked = true;
-            }
-        });
-    }
     
     // Show modal
     const editModal = new bootstrap.Modal(document.getElementById('editRoomModal'));
@@ -497,6 +361,11 @@ function deleteRoom(roomId) {
     }
 }
 
+// Limit file inputs to maximum 5 files on client-side
+document.addEventListener('DOMContentLoaded', function () {
+    // No JS limit needed; using 5 distinct inputs.
+});
+
 function duplicateRoom(roomId) {
     const room = rooms.find(r => r.id === roomId);
     if (!room) {
@@ -522,30 +391,6 @@ function duplicateRoom(roomId) {
     }
 }
 
-function vacateRoom(roomId) {
-    const room = rooms.find(r => r.id === roomId);
-    if (!room) {
-        alert('Data kamar tidak ditemukan!');
-        return;
-    }
-
-    if (confirm(`Apakah Anda yakin ingin mengosongkan kamar ${room.room_number}?\n\nKamar akan diubah statusnya menjadi "Tersedia" dan kapasitas akan diatur menjadi 0.`)) {
-        // Create form for POST request
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/rooms/${roomId}/vacate`;
-        
-        // Add CSRF token
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = '_token';
-        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        form.appendChild(csrfToken);
-        
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
 
 // Show success/error messages
 @if(session('success'))

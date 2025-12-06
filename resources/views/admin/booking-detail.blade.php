@@ -74,7 +74,7 @@
                                         <p class="mb-0">
                                             @switch($booking->status)
                                                 @case('pending')
-                                                    <span class="badge bg-warning">Pending</span>
+                                                    <span class="badge bg-warning">Menunggu</span>
                                                     @break
                                                 @case('confirmed')
                                                     <span class="badge bg-info">Dikonfirmasi</span>
@@ -101,12 +101,6 @@
                                         <p class="mb-0">{{ $booking->check_in_date->format('d M Y') }}</p>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">Tanggal Keluar</label>
-                                        <p class="mb-0">{{ $booking->check_out_date ? $booking->check_out_date->format('d M Y') : 'Tidak ditentukan' }}</p>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">Booking Fee</label>
-                                        <p class="mb-0">Rp {{ number_format($booking->booking_fee, 0, ',', '.') }}</p>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Tanggal Booking</label>
@@ -139,31 +133,120 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Nomor Kamar</label>
-                                        <p class="mb-0">{{ $booking->room->room_number }}</p>
+                                        <p class="mb-0">{{ $booking->room ? $booking->room->room_number : 'Kamar tidak ditemukan' }}</p>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Harga per Bulan</label>
-                                        <p class="mb-0">Rp {{ number_format($booking->room->price, 0, ',', '.') }}</p>
+                                        <p class="mb-0">Rp {{ $booking->room ? number_format($booking->room->price, 0, ',', '.') : 'N/A' }}</p>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Kapasitas</label>
-                                        <p class="mb-0">{{ $booking->room->capacity }} Orang</p>
+                                        <p class="mb-0">{{ $booking->room ? $booking->room->capacity : 0 }} Orang</p>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Status Kamar</label>
                                         <p class="mb-0">
+                                            @if($booking->room)
                                             <span class="badge bg-{{ $booking->room->status === 'available' ? 'success' : ($booking->room->status === 'occupied' ? 'warning' : 'danger') }}">
-                                                {{ ucfirst($booking->room->status) }}
+                                                {{ [
+                                                    'available' => 'Tersedia',
+                                                    'occupied' => 'Terisi',
+                                                    'maintenance' => 'Perawatan',
+                                                ][$booking->room->status] ?? ucfirst($booking->room->status) }}
                                             </span>
+                                            @else
+                                            <span class="text-muted">N/A</span>
+                                            @endif
                                         </p>
                                     </div>
-                                    @if($booking->room->description)
-                                        <div class="col-12 mb-3">
-                                            <label class="form-label fw-bold">Deskripsi</label>
-                                            <p class="mb-0">{{ $booking->room->description }}</p>
-                                        </div>
+                                    @if($booking->room && $booking->room->description)
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label fw-bold">Deskripsi</label>
+                                        <p class="mb-0">{{ $booking->room->description }}</p>
+                                    </div>
                                     @endif
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- DP Payment Information -->
+                        @php
+                            $roomPrice = $booking->room ? $booking->room->price : 0;
+                            $paidDp = $booking->dp_amount ?? 0;
+                            $remainingDp = max(0, $roomPrice - $paidDp);
+                            $isDpComplete = $paidDp >= $roomPrice && $roomPrice > 0;
+                        @endphp
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-money-bill-wave me-2"></i>Informasi Pembayaran DP
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                @if($roomPrice > 0)
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Harga Kosan per Bulan</label>
+                                            <p class="mb-0">
+                                                <strong class="text-success">Rp {{ number_format($roomPrice, 0, ',', '.') }}</strong>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">DP yang Sudah Dibayar</label>
+                                            <p class="mb-0">
+                                                @if($paidDp > 0)
+                                                    <strong class="text-primary">Rp {{ number_format($paidDp, 0, ',', '.') }}</strong>
+                                                @else
+                                                    <span class="text-muted">Belum ada</span>
+                                                @endif
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Sisa yang Harus Dibayar</label>
+                                            <p class="mb-0">
+                                                @if($remainingDp > 0)
+                                                    <strong class="text-danger">Rp {{ number_format($remainingDp, 0, ',', '.') }}</strong>
+                                                @else
+                                                    <strong class="text-success">Rp 0 (Lunas)</strong>
+                                                @endif
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Status DP</label>
+                                            <p class="mb-0">
+                                                @if($isDpComplete)
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check-circle me-1"></i>DP Lunas
+                                                    </span>
+                                                @elseif($paidDp > 0)
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-clock me-1"></i>DP Sebagian
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-times-circle me-1"></i>Belum Bayar DP
+                                                    </span>
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+                                    @if($remainingDp > 0 && $booking->status === 'pending')
+                                        <div class="alert alert-warning mb-0">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            <strong>Perhatian:</strong> Calon penghuni masih harus melunasi sisa DP sebesar <strong>Rp {{ number_format($remainingDp, 0, ',', '.') }}</strong> sebelum booking dapat dikonfirmasi.
+                                        </div>
+                                    @elseif($isDpComplete)
+                                        <div class="alert alert-success mb-0">
+                                            <i class="fas fa-check-circle me-2"></i>
+                                            <strong>DP sudah lunas!</strong> Booking dapat dikonfirmasi.
+                                        </div>
+                                    @endif
+                                @else
+                                    <div class="alert alert-info mb-0">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Informasi harga kamar tidak tersedia.
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -178,6 +261,7 @@
                                 </h5>
                             </div>
                             <div class="card-body">
+                                @if($booking->user)
                                 <div class="text-center mb-3">
                                     @if($booking->user->profile_picture)
                                         <img src="{{ asset('storage/' . $booking->user->profile_picture) }}" 
@@ -192,21 +276,33 @@
                                 <div class="text-center">
                                     <h6 class="mb-1">{{ $booking->user->name }}</h6>
                                     <p class="text-muted mb-2">{{ $booking->user->email }}</p>
-                                    <span class="badge bg-{{ $booking->user->role === 'admin' ? 'danger' : ($booking->user->role === 'tenant' ? 'success' : 'info') }}">
-                                        {{ ucfirst($booking->user->role) }}
-                                    </span>
+                                    @php
+                                        $roleLabel = [
+                                            'admin' => 'Admin',
+                                            'tenant' => 'Penghuni',
+                                            'seeker' => 'Pencari',
+                                        ][$booking->user->role] ?? ucfirst($booking->user->role);
+                                    @endphp
+                                    <span class="badge bg-{{ $booking->user->role === 'admin' ? 'danger' : ($booking->user->role === 'tenant' ? 'success' : 'info') }}">{{ $roleLabel }}</span>
                                 </div>
                                 <hr>
                                 <div class="row">
                                     <div class="col-12 mb-2">
                                         <small class="text-muted">Telepon</small>
-                                        <p class="mb-0">{{ $booking->user->phone }}</p>
+                                        <p class="mb-0">{{ $booking->user->phone ?? 'Tidak ada' }}</p>
                                     </div>
                                     <div class="col-12 mb-2">
                                         <small class="text-muted">Alamat</small>
-                                        <p class="mb-0">{{ $booking->user->address }}</p>
+                                        <p class="mb-0">{{ $booking->user->address ?? 'Tidak ada' }}</p>
                                     </div>
                                 </div>
+                                @else
+                                <div class="text-center py-4">
+                                    <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">User tidak ditemukan</h6>
+                                    <p class="text-muted small">User mungkin sudah dihapus dari sistem.</p>
+                                </div>
+                                @endif
                             </div>
                         </div>
 
@@ -273,27 +369,34 @@
                             </div>
                         @endif
 
-                        <!-- Complete Booking Action -->
-                        @if($booking->status === 'occupied')
+                        <!-- Nonaktifkan Penghuni Action -->
+                        @if($booking->status === 'occupied' && $booking->user && $booking->user->role === 'tenant')
                             <div class="card mb-4">
                                 <div class="card-header">
                                     <h5 class="mb-0">
-                                        <i class="fas fa-cogs me-2"></i>Selesaikan Booking
+                                        <i class="fas fa-user-slash me-2"></i>Nonaktifkan Penghuni
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <form action="{{ route('admin.bookings.complete', $booking) }}" method="POST">
+                                    <p class="text-muted mb-3">
+                                        Menonaktifkan penghuni akan otomatis menyelesaikan booking ini, mengembalikan kamar ke status tersedia, dan mengubah role pengguna kembali menjadi pencari kosan.
+                                    </p>
+                                    <form action="{{ route('admin.tenants.delete', $booking->user) }}?redirect_to=booking&booking_id={{ $booking->id }}" method="POST" id="deactivateForm" onsubmit="return confirmDeactivate()">
                                         @csrf
-                                        <div class="mb-3">
-                                            <label for="complete_notes" class="form-label">Catatan Admin (Opsional)</label>
-                                            <textarea class="form-control" id="complete_notes" name="admin_notes" rows="3" 
-                                                      placeholder="Tambahkan catatan untuk penyelesaian booking...">{{ old('admin_notes', $booking->admin_notes) }}</textarea>
-                                        </div>
-                                        <button type="submit" class="btn btn-warning w-100" 
-                                                onclick="return confirm('Selesaikan booking ini? Status akan berubah menjadi Completed dan kamar akan tersedia kembali.')">
-                                            <i class="fas fa-check-circle me-2"></i>Selesaikan Booking (Penghuni Keluar/Pindah)
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger w-100">
+                                            <i class="fas fa-user-slash me-2"></i>Nonaktifkan Penghuni
                                         </button>
                                     </form>
+                                    <script>
+                                    function confirmDeactivate() {
+                                        if (confirm('⚠️ PERINGATAN: Apakah Anda yakin ingin menonaktifkan penghuni ini?\n\nTindakan ini akan:\n• Menonaktifkan akun penghuni\n• Otomatis menyelesaikan booking ini\n• Kamar akan tersedia kembali\n• Role pengguna kembali menjadi pencari kosan\n\nKetik "NONAKTIFKAN" untuk konfirmasi:')) {
+                                            const confirmation = prompt('Ketik "NONAKTIFKAN" untuk konfirmasi:');
+                                            return confirmation === 'NONAKTIFKAN';
+                                        }
+                                        return false;
+                                    }
+                                    </script>
                                 </div>
                             </div>
                         @endif
@@ -320,21 +423,84 @@
                         @endif
 
                         <!-- Payment Proof -->
-                        @if($booking->payment_proof)
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-credit-card me-2"></i>Bukti Pembayaran
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <a href="{{ asset('storage/' . $booking->payment_proof) }}" target="_blank" 
-                                       class="btn btn-outline-success btn-sm">
-                                        <i class="fas fa-download me-1"></i>Lihat Bukti Pembayaran
-                                    </a>
-                                </div>
+                        @php
+                            // Handle both old format (string) and new format (array)
+                            $paymentProofs = [];
+                            if ($booking->payment_proof) {
+                                if (is_array($booking->payment_proof)) {
+                                    // New format: array of payment proofs
+                                    $paymentProofs = $booking->payment_proof;
+                                } elseif (is_string($booking->payment_proof)) {
+                                    // Old format: single string, try to decode as JSON first
+                                    $decoded = json_decode($booking->payment_proof, true);
+                                    if (is_array($decoded)) {
+                                        $paymentProofs = $decoded;
+                                    } else {
+                                        // It's a plain string path, convert to array format
+                                        $paymentProofs = [[
+                                            'path' => $booking->payment_proof,
+                                            'amount' => $booking->dp_amount ?? 0,
+                                            'created_at' => $booking->created_at ? $booking->created_at->toDateTimeString() : now()->toDateTimeString(),
+                                        ]];
+                                    }
+                                }
+                            }
+                        @endphp
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-credit-card me-2"></i>Bukti Pembayaran DP
+                                    @if(count($paymentProofs) > 0)
+                                        <span class="badge bg-primary ms-2">{{ count($paymentProofs) }} Bukti</span>
+                                    @endif
+                                </h5>
                             </div>
-                        @endif
+                            <div class="card-body">
+                                @if(count($paymentProofs) > 0)
+                                    @foreach($paymentProofs as $index => $proof)
+                                        @php
+                                            // Handle different proof formats
+                                            $proofPath = is_array($proof) ? ($proof['path'] ?? $proof) : $proof;
+                                            $proofAmount = is_array($proof) ? ($proof['amount'] ?? 0) : ($booking->dp_amount ?? 0);
+                                            $proofDate = is_array($proof) && isset($proof['created_at']) ? $proof['created_at'] : null;
+                                        @endphp
+                                        <div class="mb-3 pb-3 {{ !$loop->last ? 'border-bottom' : '' }}">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <label class="form-label fw-bold mb-1">
+                                                        Bukti Pembayaran #{{ $loop->iteration }}
+                                                    </label>
+                                                    <p class="mb-1">
+                                                        <strong class="text-primary">Jumlah: Rp {{ number_format($proofAmount, 0, ',', '.') }}</strong>
+                                                    </p>
+                                                    @if($proofDate)
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-clock me-1"></i>
+                                                            {{ \Carbon\Carbon::parse($proofDate)->format('d M Y H:i') }}
+                                                        </small>
+                                                    @endif
+                                                </div>
+                                                <a href="{{ asset('storage/' . $proofPath) }}" target="_blank" 
+                                                   class="btn btn-outline-success btn-sm">
+                                                    <i class="fas fa-download me-1"></i>Lihat
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                    <div class="mt-3 pt-3 border-top">
+                                        <label class="form-label fw-bold">Total DP yang Dibayar</label>
+                                        <p class="mb-0">
+                                            <strong class="text-success fs-5">Rp {{ number_format($booking->dp_amount ?? 0, 0, ',', '.') }}</strong>
+                                        </p>
+                                    </div>
+                                @else
+                                    <div class="alert alert-warning mb-0">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Belum ada bukti pembayaran DP yang diupload.
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -376,3 +542,4 @@
 }
 </style>
 @endsection
+

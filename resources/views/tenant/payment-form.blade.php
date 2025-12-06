@@ -32,14 +32,6 @@
                         <h2 class="mb-0">
                             <i class="fas fa-credit-card me-2"></i>Bayar Tagihan #{{ $bill->id }}
                         </h2>
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="{{ route('tenant.dashboard') }}">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('tenant.bills') }}">Tagihan Saya</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('tenant.bills.detail', $bill) }}">Detail Tagihan</a></li>
-                                <li class="breadcrumb-item active">Bayar Tagihan</li>
-                            </ol>
-                        </nav>
                     </div>
                     <div>
                         <a href="{{ route('tenant.bills.detail', $bill) }}" class="btn btn-outline-secondary">
@@ -80,16 +72,78 @@
 
                                     <!-- Payment Method -->
                                     <div class="mb-3">
-                                        <label for="payment_method" class="form-label">Metode Pembayaran <span class="text-danger">*</span></label>
-                                        <select class="form-select @error('payment_method') is-invalid @enderror" 
-                                                id="payment_method" name="payment_method" required>
-                                            <option value="">Pilih metode pembayaran</option>
-                                            <option value="bank_transfer" {{ old('payment_method') == 'bank_transfer' ? 'selected' : '' }}>Transfer Bank</option>
-                                            <option value="e_wallet" {{ old('payment_method') == 'e_wallet' ? 'selected' : '' }}>E-Wallet</option>
-                                        </select>
+                                        <label class="form-label">Metode Pembayaran <span class="text-danger">*</span></label>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="payment_method_bank" value="bank_transfer" {{ old('payment_method', 'bank_transfer') === 'bank_transfer' ? 'checked' : '' }} required>
+                                            <label class="form-check-label" for="payment_method_bank">
+                                                <i class="fas fa-university me-1"></i>Transfer Bank
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="payment_method_dana" value="dana" {{ old('payment_method') === 'dana' ? 'checked' : '' }} required>
+                                            <label class="form-check-label" for="payment_method_dana">
+                                                <i class="fas fa-mobile-alt me-1"></i>DANA
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="payment_method_gopay" value="gopay" {{ old('payment_method') === 'gopay' ? 'checked' : '' }} required>
+                                            <label class="form-check-label" for="payment_method_gopay">
+                                                <i class="fas fa-mobile-alt me-1"></i>GoPay
+                                            </label>
+                                        </div>
                                         @error('payment_method')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            <div class="text-danger small">{{ $message }}</div>
                                         @enderror
+                                    </div>
+
+                                    <!-- Payment Instructions (same as DP) -->
+                                    <div class="alert alert-secondary mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-university me-3 mt-1"></i>
+                                            <div class="w-100">
+                                                <div class="fw-semibold mb-2">No. Rekening <span class="text-muted">({{ config('app.bank.name') }})</span></div>
+                                                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                                    <span class="fs-5 fw-bold">{{ config('app.bank.account') }}</span>
+                                                    <span class="badge bg-light text-dark">{{ config('app.bank.holder') }}</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyBankAccount()">
+                                                        <i class="fas fa-copy me-1"></i>Salin
+                                                    </button>
+                                                </div>
+                                                @if(config('app.bank.note'))
+                                                    <div class="small text-muted">{{ config('app.bank.note') }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-light border mb-3">
+                                        <div class="fw-semibold mb-2"><i class="fas fa-mobile-alt me-2"></i>E-Wallet</div>
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <span class="badge bg-info text-dark">DANA</span>
+                                                    <div class="d-flex flex-column">
+                                                        <span class="fw-semibold">{{ config('app.ewallets.dana.number') }}</span>
+                                                        <small class="text-muted">{{ config('app.ewallets.dana.holder') }}</small>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyDana()">
+                                                    <i class="fas fa-copy me-1"></i>Salin
+                                                </button>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <span class="badge bg-success">GoPay</span>
+                                                    <div class="d-flex flex-column">
+                                                        <span class="fw-semibold">{{ config('app.ewallets.gopay.number') }}</span>
+                                                        <small class="text-muted">{{ config('app.ewallets.gopay.holder') }}</small>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyGopay()">
+                                                    <i class="fas fa-copy me-1"></i>Salin
+                                                </button>
+                                            </li>
+                                        </ul>
                                     </div>
 
                                     <!-- Payment Proof -->
@@ -168,7 +222,10 @@
                                     <div class="alert alert-danger">
                                         <i class="fas fa-exclamation-triangle me-2"></i>
                                         <strong>Tagihan Terlambat!</strong><br>
-                                        Terlambat {{ \Carbon\Carbon::parse($bill->due_date)->diffInDays(now()) }} hari
+                                        @php
+                                            $daysLate = \Carbon\Carbon::parse($bill->due_date)->startOfDay()->diffInDays(now()->startOfDay(), false);
+                                        @endphp
+                                        Terlambat {{ max(0, (int) $daysLate) }} hari
                                         @if(isset($bill->late_fee) && $bill->late_fee > 0)
                                             <br>Denda: Rp {{ number_format($bill->late_fee, 0, ',', '.') }}
                                         @endif
@@ -180,47 +237,13 @@
                                         @php
                                             $daysLeft = \Carbon\Carbon::now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($bill->due_date)->startOfDay(), false);
                                         @endphp
-                                        {{ max(0, (int) $daysLeft) }} hari lagi
+                                        {{ $daysLeft > 0 ? (int) $daysLeft . ' hari lagi' : 'Hari ini jatuh tempo' }}
                                     </div>
                                 @endif
                             </div>
                         </div>
 
-                        <!-- Payment Instructions -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-info-circle me-2"></i>Instruksi Pembayaran
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <h6>Transfer Bank:</h6>
-                                    <ul class="list-unstyled mb-0">
-                                        <li><strong>BCA:</strong> 1234567890</li>
-                                        <li><strong>Mandiri:</strong> 0987654321</li>
-                                        <li><strong>BNI:</strong> 1122334455</li>
-                                    </ul>
-                                    <small class="text-muted">A/N: Admin Kosku</small>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <h6>E-Wallet:</h6>
-                                    <ul class="list-unstyled mb-0">
-                                        <li><strong>DANA:</strong> 081234567890</li>
-                                        <li><strong>OVO:</strong> 081234567890</li>
-                                        <li><strong>GoPay:</strong> 081234567890</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="alert alert-info">
-                                    <small>
-                                        <i class="fas fa-lightbulb me-1"></i>
-                                        <strong>Tips:</strong> Pastikan nominal transfer sesuai dengan tagihan dan sertakan nomor tagihan di keterangan transfer.
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
+                        
 
                         <!-- Contact Info -->
                         <div class="card">
@@ -232,8 +255,7 @@
                             <div class="card-body">
                                 <p class="mb-2">
                                     <strong>Hubungi Admin:</strong><br>
-                                    📞 081234567890<br>
-                                    📧 admin@kosku.com
+                                    📞 081319623603
                                 </p>
                                 <p class="mb-0">
                                     <strong>Jam Operasional:</strong><br>
@@ -294,6 +316,34 @@
 </style>
 
 <script>
+// Copy functions that also select payment method
+function copyBankAccount() {
+    const accountNumber = '{{ config('app.bank.account') }}';
+    navigator.clipboard.writeText(accountNumber).then(function() {
+        // Select bank transfer radio button
+        document.getElementById('payment_method_bank').checked = true;
+        alert('Nomor rekening berhasil disalin! Metode pembayaran: Transfer Bank');
+    });
+}
+
+function copyDana() {
+    const danaNumber = '{{ config('app.ewallets.dana.number') }}';
+    navigator.clipboard.writeText(danaNumber).then(function() {
+        // Select DANA radio button
+        document.getElementById('payment_method_dana').checked = true;
+        alert('Nomor DANA berhasil disalin! Metode pembayaran: DANA');
+    });
+}
+
+function copyGopay() {
+    const gopayNumber = '{{ config('app.ewallets.gopay.number') }}';
+    navigator.clipboard.writeText(gopayNumber).then(function() {
+        // Select GoPay radio button
+        document.getElementById('payment_method_gopay').checked = true;
+        alert('Nomor GoPay berhasil disalin! Metode pembayaran: GoPay');
+    });
+}
+
 // Payment proof preview functionality
 document.getElementById('payment_proof').addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -320,14 +370,7 @@ document.getElementById('payment_proof').addEventListener('change', function(e) 
 document.querySelector('form').addEventListener('submit', function(e) {
     const amount = parseFloat(document.getElementById('amount').value);
     const totalAmount = {{ $bill->total_amount }};
-    const paymentMethod = document.getElementById('payment_method').value;
     const paymentProof = document.getElementById('payment_proof').files[0];
-    
-    if (!paymentMethod) {
-        e.preventDefault();
-        alert('Mohon pilih metode pembayaran!');
-        return false;
-    }
     
     if (!paymentProof) {
         e.preventDefault();

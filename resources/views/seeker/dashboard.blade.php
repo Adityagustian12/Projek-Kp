@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Pencari Kosan - Kos-Kosan Management')
+@section('title', 'Dashboard Pencari Kosan - Kos-Kosan H.Kastim')
 
 @section('content')
 <div class="container-fluid">
@@ -16,12 +16,6 @@
                     <a class="nav-link" href="{{ route('bookings.my') }}">
                         <i class="fas fa-calendar-check me-2"></i>Booking Saya
                     </a>
-                    <a class="nav-link" href="{{ route('profile.show') }}">
-                        <i class="fas fa-user me-2"></i>Data Diri
-                    </a>
-                    <a class="nav-link" href="{{ route('public.home') }}">
-                        <i class="fas fa-bed me-2"></i>Cari Kamar
-                    </a>
                 </nav>
             </div>
         </div>
@@ -33,22 +27,80 @@
                     <h2 class="mb-0">
                         <i class="fas fa-search me-2"></i>Dashboard Pencari Kosan
                     </h2>
-                    <span class="badge bg-info fs-6">Selamat datang, {{ auth()->user()->name }}</span>
+                    <span class="badge bg-primary fs-6">Selamat datang, {{ auth()->user()->name }}</span>
                 </div>
 
-                <!-- Role Transition Alert -->
-                @if($can_become_tenant)
+                @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <h5 class="alert-heading">
-                            <i class="fas fa-check-circle me-2"></i>Selamat! Booking Anda Dikonfirmasi
-                        </h5>
-                        <p class="mb-2">Booking Anda telah dikonfirmasi oleh admin. Anda sekarang adalah <strong>Penghuni</strong>!</p>
-                        <p class="mb-0">Silakan refresh halaman untuk mengakses dashboard penghuni.</p>
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('error') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
 
-                <!-- Statistics Cards -->
+                <!-- Important Notice: DP Payment Required -->
+                @if($bookings_need_dp->count() > 0)
+                    <div class="alert alert-warning border-warning border-2 alert-dismissible fade show shadow-sm" role="alert">
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0 me-3">
+                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="alert-heading mb-2">
+                                    <i class="fas fa-info-circle me-2"></i>Penting: Pelunasan DP Diperlukan
+                                </h5>
+                                <p class="mb-2">
+                                    <strong>Calon penghuni harus melunasi DP (Down Payment) terlebih dahulu</strong> untuk memproses booking Anda. 
+                                    Booking tidak akan diproses oleh admin sebelum DP dilunasi dan diverifikasi.
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Anda memiliki {{ $bookings_need_dp->count() }} booking yang belum melunasi DP:</strong>
+                                </p>
+                                <ul class="mb-2">
+                                    @foreach($bookings_need_dp as $booking)
+                                        <li>
+                                            <strong>Kamar {{ $booking->room->room_number }}</strong> - 
+                                            <a href="{{ route('seeker.bookings.dp-payment', $booking) }}" class="alert-link fw-bold">
+                                                Klik di sini untuk melunasi DP
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                                <hr class="my-2">
+                                <p class="mb-0 small">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    <strong>Tips:</strong> Setelah melakukan transfer, segera upload bukti pembayaran untuk mempercepat proses verifikasi.
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @elseif($stats['pending_bookings'] > 0)
+                    <div class="alert alert-info border-info border-2 alert-dismissible fade show shadow-sm" role="alert">
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0 me-3">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="alert-heading mb-2">
+                                    <i class="fas fa-info-circle me-2"></i>Informasi Penting
+                                </h5>
+                                <p class="mb-0">
+                                    <strong>Calon penghuni harus melunasi DP (Down Payment) terlebih dahulu</strong> untuk memproses booking. 
+                                    Pastikan Anda telah melunasi DP dan menunggu verifikasi dari admin.
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                <!-- Statistics Cards (match admin style) -->
                 <div class="row mb-4">
                     <div class="col-xl-3 col-md-6 mb-3">
                         <div class="card bg-primary text-white">
@@ -65,7 +117,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-xl-3 col-md-6 mb-3">
                         <div class="card bg-warning text-white">
                             <div class="card-body">
@@ -81,7 +132,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-xl-3 col-md-6 mb-3">
                         <div class="card bg-success text-white">
                             <div class="card-body">
@@ -97,7 +147,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-xl-3 col-md-6 mb-3">
                         <div class="card bg-danger text-white">
                             <div class="card-body">
@@ -115,102 +164,108 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-bolt me-2"></i>Aksi Cepat
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3 mb-2">
-                                        <a href="{{ route('public.home') }}" class="btn btn-outline-primary w-100">
-                                            <i class="fas fa-bed me-2"></i>Cari Kamar Baru
+                <!-- Recent Bookings -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Booking Terbaru</h5>
+                    </div>
+                    <div class="card-body">
+                        @forelse($recent_bookings as $booking)
+                            @php
+                                $needsDp = $booking->status === 'pending' && (!$booking->payment_proof || $booking->payment_proof === '');
+                            @endphp
+                            <div class="d-flex align-items-center mb-3 pb-3 border-bottom {{ $needsDp ? 'bg-light p-3 rounded border-warning border-start border-3' : '' }}">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-calendar-alt fa-2x text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">
+                                        {{ $booking->room->room_number }}
+                                        @if($needsDp)
+                                            <span class="badge bg-danger ms-2">
+                                                <i class="fas fa-exclamation-circle me-1"></i>Belum Lunas DP
+                                            </span>
+                                        @endif
+                                    </h6>
+                                    <small class="text-muted">{{ $booking->created_at->format('d M Y') }}</small>
+                                    @if($booking->dp_amount)
+                                        <div class="mt-1">
+                                            <small class="text-muted">DP: Rp {{ number_format($booking->dp_amount, 0, ',', '.') }}</small>
+                                        </div>
+                                    @else
+                                        <div class="mt-1">
+                                            <small class="text-danger fw-bold">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>DP Belum Dibayar
+                                            </small>
+                                        </div>
+                                    @endif
+                                    @if($needsDp)
+                                        <div class="mt-2">
+                                            <small class="text-danger">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                <strong>Segera lunasi DP untuk memproses booking Anda!</strong>
+                                            </small>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="flex-shrink-0 d-flex flex-column align-items-end gap-2">
+                                    <span class="badge bg-{{ $booking->status === 'pending' ? 'warning' : ($booking->status === 'confirmed' ? 'success' : 'danger') }}">
+                                        {{ [
+                                            'pending' => 'Menunggu',
+                                            'confirmed' => 'Dikonfirmasi',
+                                            'rejected' => 'Ditolak',
+                                            'occupied' => 'Terisi',
+                                        ][$booking->status] ?? ucfirst($booking->status) }}
+                                    </span>
+                                    @if($booking->status === 'pending')
+                                        <a href="{{ route('seeker.bookings.dp-payment', $booking) }}" class="btn btn-sm btn-success {{ $needsDp ? 'shadow-sm' : '' }}">
+                                            <i class="fas fa-money-bill-wave me-1"></i>Lunasi DP
                                         </a>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <a href="{{ route('bookings.my') }}" class="btn btn-outline-info w-100">
-                                            <i class="fas fa-calendar-check me-2"></i>Lihat Booking
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <a href="{{ route('profile.show') }}" class="btn btn-outline-warning w-100">
-                                            <i class="fas fa-user me-2"></i>Update Profil
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <a href="{{ route('public.room.detail', 1) }}" class="btn btn-outline-success w-100">
-                                            <i class="fas fa-eye me-2"></i>Lihat Kamar
-                                        </a>
-                                    </div>
+                                        @if($booking->payment_proof)
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-check me-1"></i>DP Terkirim
+                                            </span>
+                                        @endif
+                                    @endif
                                 </div>
                             </div>
-                        </div>
+                        @empty
+                            <div class="text-center text-muted py-4">Belum ada booking</div>
+                        @endforelse
                     </div>
                 </div>
 
-                <!-- Recent Bookings -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-calendar-check me-2"></i>Booking Terbaru
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                @forelse($recent_bookings as $booking)
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="flex-shrink-0">
-                                            <i class="fas fa-bed fa-2x text-primary"></i>
-                                        </div>
-                                        <div class="flex-grow-1 ms-3">
-                                            <h6 class="mb-1">Kamar {{ $booking->room->room_number }}</h6>
-                                            <p class="mb-1 text-muted">Kapasitas: {{ $booking->room->capacity }} orang - Rp {{ number_format($booking->room->price, 0, ',', '.') }}/bulan</p>
-                                            <small class="text-muted">Tanggal Masuk: {{ $booking->check_in_date->format('d M Y') }}</small>
-                                        </div>
-                                        <div class="flex-shrink-0">
-                                            <span class="badge bg-{{ $booking->status === 'pending' ? 'warning' : ($booking->status === 'confirmed' ? 'success' : 'danger') }}">
-                                                {{ ucfirst($booking->status) }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div class="text-center py-4">
-                                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                                        <h5 class="text-muted">Belum ada booking</h5>
-                                        <p class="text-muted">Mulai booking kamar yang Anda inginkan.</p>
-                                        <a href="{{ route('public.home') }}" class="btn btn-primary">
-                                            <i class="fas fa-bed me-2"></i>Cari Kamar
-                                        </a>
-                                    </div>
-                                @endforelse
-                                
-                                @if($recent_bookings->count() > 0)
-                                    <div class="text-center">
-                                        <a href="{{ route('bookings.my') }}" class="btn btn-outline-primary btn-sm">
-                                            Lihat Semua Booking
-                                        </a>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
             </div>
         </div>
     </div>
 </div>
+<style>
+.sidebar {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    border-right: 1px solid #dee2e6;
+}
 
-@if($can_become_tenant)
-<script>
-    // Auto refresh after 3 seconds to show tenant dashboard
-    setTimeout(function() {
-        window.location.reload();
-    }, 3000);
-</script>
-@endif
+.main-content {
+    background-color: #fff;
+}
+
+.nav-link {
+    color: #495057;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.25rem;
+}
+
+.nav-link:hover {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.nav-link.active {
+    background-color: #0d6efd;
+    color: white;
+}
+</style>
 @endsection

@@ -32,13 +32,7 @@
                         <h2 class="mb-0">
                             <i class="fas fa-file-invoice me-2"></i>Detail Tagihan #{{ $bill->id }}
                         </h2>
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="{{ route('tenant.dashboard') }}">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('tenant.bills') }}">Tagihan Saya</a></li>
-                                <li class="breadcrumb-item active">Detail Tagihan</li>
-                            </ol>
-                        </nav>
+                        
                     </div>
                     <div>
                         <a href="{{ route('tenant.bills') }}" class="btn btn-outline-secondary me-2">
@@ -179,26 +173,6 @@
 
                     <!-- Sidebar -->
                     <div class="col-lg-4">
-                        <!-- Quick Actions -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-bolt me-2"></i>Aksi Cepat
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-grid gap-2">
-                                    @if($bill->status === 'pending' || $bill->status === 'overdue')
-                                        <a href="{{ route('tenant.bills.payment', $bill) }}" class="btn btn-success">
-                                            <i class="fas fa-credit-card me-2"></i>Bayar Tagihan
-                                        </a>
-                                    @endif
-                                    <button class="btn btn-outline-primary" onclick="printBill()">
-                                        <i class="fas fa-print me-2"></i>Cetak Tagihan
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Payment Status -->
                         <div class="card mb-4">
@@ -220,8 +194,11 @@
                                     <div class="text-center">
                                         <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
                                         <h5 class="text-danger">Terlambat</h5>
+                                        @php
+                                            $daysLate = \Carbon\Carbon::parse($bill->due_date)->startOfDay()->diffInDays(now()->startOfDay(), false);
+                                        @endphp
                                         <p class="text-muted mb-0">
-                                            Terlambat {{ \Carbon\Carbon::parse($bill->due_date)->diffInDays(now()) }} hari
+                                            Terlambat {{ max(0, (int) $daysLate) }} hari
                                         </p>
                                         @if(isset($bill->late_fee) && $bill->late_fee > 0)
                                             <p class="text-danger mb-0">

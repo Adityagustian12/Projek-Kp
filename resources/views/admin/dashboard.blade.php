@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Admin - Kos-Kosan Management')
+@section('title', 'Dashboard Admin - Kos-Kosan H.Kastim')
 
 @section('content')
 <div class="container-fluid">
@@ -112,42 +112,6 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-bolt me-2"></i>Aksi Cepat
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3 mb-2">
-                                        <a href="{{ route('admin.bookings') }}" class="btn btn-outline-warning w-100">
-                                            <i class="fas fa-calendar-check me-2"></i>Kelola Booking
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <a href="{{ route('admin.rooms') }}" class="btn btn-outline-primary w-100">
-                                            <i class="fas fa-bed me-2"></i>Kelola Kamar
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <a href="{{ route('admin.bills') }}" class="btn btn-outline-success w-100">
-                                            <i class="fas fa-file-invoice me-2"></i>Kelola Tagihan
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3 mb-2">
-                                        <a href="{{ route('admin.tenants') }}" class="btn btn-outline-info w-100">
-                                            <i class="fas fa-users me-2"></i>Kelola Penghuni
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Recent Bookings -->
                 <div class="row">
@@ -165,13 +129,18 @@
                                             <i class="fas fa-calendar-alt fa-2x text-primary"></i>
                                         </div>
                                         <div class="flex-grow-1 ms-3">
-                                            <h6 class="mb-1">{{ $booking->user->name }}</h6>
-                                            <p class="mb-1 text-muted">Kamar {{ $booking->room->room_number }} - Kapasitas: {{ $booking->room->capacity }} orang</p>
-                                            <small class="text-muted">Tanggal Masuk: {{ $booking->check_in_date->format('d M Y') }}</small>
+                                            <h6 class="mb-1">{{ $booking->user ? $booking->user->name : 'User tidak ditemukan' }}</h6>
+                                            <p class="mb-1 text-muted">Kamar {{ $booking->room ? $booking->room->room_number : 'N/A' }} - Kapasitas: {{ $booking->room ? $booking->room->capacity : 0 }} orang</p>
+                                            <small class="text-muted">Tanggal Masuk: {{ $booking->check_in_date ? $booking->check_in_date->format('d M Y') : 'N/A' }}</small>
                                         </div>
                                         <div class="flex-shrink-0">
                                             <span class="badge bg-{{ $booking->status === 'pending' ? 'warning' : ($booking->status === 'confirmed' ? 'success' : 'danger') }}">
-                                                {{ ucfirst($booking->status) }}
+                                                {{ [
+                                                    'pending' => 'Menunggu',
+                                                    'confirmed' => 'Dikonfirmasi',
+                                                    'rejected' => 'Ditolak',
+                                                    'occupied' => 'Terisi',
+                                                ][$booking->status] ?? ucfirst($booking->status) }}
                                             </span>
                                         </div>
                                     </div>
@@ -209,12 +178,18 @@
                                         </div>
                                         <div class="flex-grow-1 ms-3">
                                             <h6 class="mb-1">{{ $complaint->title }}</h6>
-                                            <p class="mb-1 text-muted">{{ $complaint->user->name }}</p>
-                                            <small class="text-muted">{{ $complaint->created_at->format('d M Y') }}</small>
+                                            <p class="mb-1 text-muted">{{ $complaint->user ? $complaint->user->name : 'User tidak ditemukan' }}</p>
+                                            <small class="text-muted">{{ $complaint->created_at ? $complaint->created_at->format('d M Y') : 'N/A' }}</small>
                                         </div>
                                         <div class="flex-shrink-0">
                                             <span class="badge bg-{{ $complaint->status === 'pending' ? 'warning' : ($complaint->status === 'resolved' ? 'success' : 'info') }}">
-                                                {{ ucfirst($complaint->status) }}
+                                                {{ [
+                                                    'new' => 'Baru',
+                                                    'pending' => 'Menunggu',
+                                                    'in_progress' => 'Diproses',
+                                                    'resolved' => 'Selesai',
+                                                    'closed' => 'Ditutup',
+                                                ][$complaint->status] ?? ucfirst($complaint->status) }}
                                             </span>
                                         </div>
                                     </div>

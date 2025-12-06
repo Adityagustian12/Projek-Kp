@@ -93,7 +93,7 @@ class DashboardController extends Controller
         
         $request->validate([
             'amount' => 'nullable',
-            'payment_method' => 'required|in:bank_transfer,e_wallet',
+            'payment_method' => 'required|in:bank_transfer,dana,gopay',
             'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'notes' => 'nullable|string|max:500',
         ]);
@@ -139,14 +139,7 @@ class DashboardController extends Controller
      */
     public function showComplaintForm()
     {
-        $user = auth()->user();
-        $rooms = $user->bookings()
-                     ->where('status', 'confirmed')
-                     ->with('room')
-                     ->get()
-                     ->pluck('room');
-
-        return view('tenant.complaint-form', compact('rooms'));
+        return view('tenant.complaint-form');
     }
 
     /**
@@ -155,39 +148,24 @@ class DashboardController extends Controller
     public function submitComplaint(Request $request)
     {
         $request->validate([
-            'category' => 'required|string|max:100',
-            'title' => 'required|string|max:200',
-            'description' => 'required|string|max:1000',
-            'location' => 'nullable|string|max:200',
-            'priority' => 'required|in:low,medium,high,urgent',
-            'images.*' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
-            'room_id' => 'nullable|exists:rooms,id',
+            'description' => 'required|string|min:10|max:2000',
         ]);
 
         $complaint = new Complaint([
             'user_id' => auth()->id(),
-            'room_id' => $request->room_id,
-            'category' => $request->category,
-            'title' => $request->title,
+            'room_id' => null,
+            'category' => 'general',
+            'title' => 'Keluhan Umum',
             'description' => $request->description,
-            'location' => $request->location,
-            'priority' => $request->priority,
+            'location' => null,
+            'priority' => 'medium',
             'status' => 'new',
         ]);
-
-        if ($request->hasFile('images')) {
-            $images = [];
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('complaint-images', 'public');
-                $images[] = $path;
-            }
-            $complaint->images = $images;
-        }
 
         $complaint->save();
 
         return redirect()->route('tenant.complaints')
-                        ->with('success', 'Komplain berhasil diajukan. Admin akan segera menindaklanjuti.');
+                        ->with('success', 'Keluhan berhasil diajukan. Admin akan segera menindaklanjuti.');
     }
 
     /**
