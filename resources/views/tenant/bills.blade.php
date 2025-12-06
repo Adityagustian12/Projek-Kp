@@ -43,9 +43,10 @@
                     <div class="card-body">
                         @if($bills->count() > 0)
                             <!-- Desktop Table View - Only for screens ≥992px (desktop only) -->
-                            <div class="d-none d-lg-block bills-table-desktop" style="display: none !important;">
-                                <div class="table-responsive" style="display: none !important;">
-                                    <table class="table table-hover table-sm" style="display: none !important;">
+                            <!-- HIDDEN ON MOBILE - Use CSS and JS to ensure it's hidden -->
+                            <div class="bills-table-desktop" style="display: none;">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm">
                                         <thead>
                                             <tr>
                                                 <th style="min-width: 80px;">#</th>
@@ -116,7 +117,8 @@
 
                             <!-- Mobile Card View - For all mobile screens (<992px) - NO TABLE -->
                             <!-- Works for both portrait and landscape orientation -->
-                            <div class="d-lg-none bills-card-mobile" style="display: block !important; width: 100% !important; max-width: 100% !important;">
+                            <!-- ALWAYS SHOWN ON MOBILE - Use CSS and JS to ensure it's visible -->
+                            <div class="bills-card-mobile" style="display: block; width: 100%; max-width: 100%;">
                                 @foreach($bills as $bill)
                                     <div class="card mb-3 shadow-sm border">
                                         <div class="card-body p-3">
@@ -337,6 +339,7 @@
 /* Portrait mode - Force card view - NO SCROLL */
 @media screen and (max-width: 991px) and (orientation: portrait) {
     /* Hide ALL tables on mobile portrait - ULTRA AGGRESSIVE */
+    /* Target semua kemungkinan selector untuk tabel */
     .bills-table-desktop,
     .bills-table-desktop *,
     .table-responsive,
@@ -348,7 +351,9 @@
     th,
     td,
     .d-none.d-lg-block,
-    .d-none.d-md-block {
+    .d-none.d-md-block,
+    div[class*="table"],
+    div[class*="Table"] {
         display: none !important;
         visibility: hidden !important;
         width: 0 !important;
@@ -357,6 +362,15 @@
         position: absolute !important;
         left: -9999px !important;
         opacity: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Hide table container secara spesifik */
+    .card-body .table-responsive,
+    .card-body .table,
+    .card-body table {
+        display: none !important;
     }
     
     /* Force card view to be visible */
@@ -459,27 +473,64 @@
     }
 }
 
-/* General mobile - below 992px */
+/* General mobile - below 992px - HIDE ALL TABLES */
 @media screen and (max-width: 991px) {
-    /* Hide ALL tables */
+    /* Hide ALL tables - Target semua kemungkinan - ULTRA AGGRESSIVE */
     .bills-table-desktop,
     .bills-table-desktop *,
     .table-responsive,
     .table,
-    table {
+    table,
+    thead,
+    tbody,
+    tr,
+    th,
+    td,
+    .d-none.d-lg-block {
         display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+        opacity: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
     }
     
-    /* Show card view */
-    .bills-card-mobile {
+    /* Show card view - FORCE VISIBLE */
+    .bills-card-mobile,
+    .d-lg-none {
         display: block !important;
+        visibility: visible !important;
         width: 100% !important;
+        max-width: 100% !important;
+        position: relative !important;
+        opacity: 1 !important;
     }
     
     /* Prevent horizontal scroll */
-    html, body, .container-fluid, .main-content {
+    html, body, .container-fluid, .main-content, .card-body, .card {
         overflow-x: hidden !important;
         max-width: 100vw !important;
+        width: 100% !important;
+    }
+    
+    /* Ensure no table is visible - Target semua selector */
+    *[class*="table"],
+    *[class*="Table"],
+    div[class*="table"],
+    div[class*="Table"] {
+        display: none !important;
+    }
+    
+    /* Hide table container secara spesifik */
+    .card-body > .bills-table-desktop,
+    .card-body > .table-responsive,
+    .card-body > .table,
+    .card-body > table {
+        display: none !important;
     }
 }
 
@@ -685,31 +736,70 @@ function payBill(billId) {
     function hideTableOnMobile() {
         // Use 992px breakpoint to match Bootstrap lg breakpoint
         const isMobile = window.innerWidth < 992;
-        const isPortrait = window.innerHeight > window.innerWidth;
         
         if (isMobile) {
-            // Hide all tables - ULTRA AGGRESSIVE
-            const tables = document.querySelectorAll('.bills-table-desktop, .table-responsive, .table, table, thead, tbody');
-            tables.forEach(function(table) {
-                if (table) {
-                    table.style.setProperty('display', 'none', 'important');
-                    table.style.setProperty('visibility', 'hidden', 'important');
-                    table.style.setProperty('width', '0', 'important');
-                    table.style.setProperty('height', '0', 'important');
-                    table.style.setProperty('position', 'absolute', 'important');
-                    table.style.setProperty('left', '-9999px', 'important');
-                    table.style.setProperty('opacity', '0', 'important');
-                    table.classList.add('d-none');
+            // Hide all tables - ULTRA AGGRESSIVE - Target semua kemungkinan
+            const selectors = [
+                '.bills-table-desktop',
+                '.table-responsive',
+                '.table',
+                'table',
+                'thead',
+                'tbody',
+                'tr',
+                'th',
+                'td'
+            ];
+            
+            selectors.forEach(function(selector) {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(function(el) {
+                    if (el && !el.closest('.bills-card-mobile')) {
+                        el.style.setProperty('display', 'none', 'important');
+                        el.style.setProperty('visibility', 'hidden', 'important');
+                        el.style.setProperty('width', '0', 'important');
+                        el.style.setProperty('height', '0', 'important');
+                        el.style.setProperty('position', 'absolute', 'important');
+                        el.style.setProperty('left', '-9999px', 'important');
+                        el.style.setProperty('opacity', '0', 'important');
+                        el.style.setProperty('margin', '0', 'important');
+                        el.style.setProperty('padding', '0', 'important');
+                        el.style.setProperty('border', 'none', 'important');
+                        el.classList.add('d-none');
+                        // Remove from DOM flow
+                        if (el.parentNode) {
+                            el.parentNode.style.setProperty('display', 'none', 'important');
+                        }
+                    }
+                });
+            });
+            
+            // Hide table container secara spesifik - termasuk parent
+            const tableContainers = document.querySelectorAll('.bills-table-desktop, .card-body .table-responsive, .card-body .table, .card-body table');
+            tableContainers.forEach(function(el) {
+                el.style.setProperty('display', 'none', 'important');
+                el.style.setProperty('visibility', 'hidden', 'important');
+                // Hide parent juga jika perlu
+                if (el.parentNode && el.parentNode.classList.contains('card-body')) {
+                    const parent = el.parentNode;
+                    const allChildren = parent.querySelectorAll('*');
+                    allChildren.forEach(function(child) {
+                        if (child.tagName === 'TABLE' || child.classList.contains('table') || child.classList.contains('table-responsive') || child.classList.contains('bills-table-desktop')) {
+                            child.style.setProperty('display', 'none', 'important');
+                        }
+                    });
                 }
             });
             
-            // Show card view
+            // Show card view - FORCE
             const cardView = document.querySelector('.bills-card-mobile');
             if (cardView) {
                 cardView.style.setProperty('display', 'block', 'important');
                 cardView.style.setProperty('visibility', 'visible', 'important');
                 cardView.style.setProperty('width', '100%', 'important');
                 cardView.style.setProperty('max-width', '100%', 'important');
+                cardView.style.setProperty('position', 'relative', 'important');
+                cardView.style.setProperty('opacity', '1', 'important');
                 cardView.classList.remove('d-none');
             }
             
@@ -719,11 +809,17 @@ function payBill(billId) {
             document.body.style.setProperty('max-width', '100vw', 'important');
             document.documentElement.style.setProperty('max-width', '100vw', 'important');
             
-            // Hide any table-responsive containers
-            const tableResponsive = document.querySelectorAll('.table-responsive');
-            tableResponsive.forEach(function(el) {
-                el.style.setProperty('display', 'none', 'important');
-            });
+            // Hide desktop table container - FORCE
+            const desktopTable = document.querySelector('.bills-table-desktop');
+            if (desktopTable) {
+                desktopTable.style.setProperty('display', 'none', 'important');
+                desktopTable.style.setProperty('visibility', 'hidden', 'important');
+                // Hide all children
+                const allTableElements = desktopTable.querySelectorAll('*');
+                allTableElements.forEach(function(el) {
+                    el.style.setProperty('display', 'none', 'important');
+                });
+            }
         } else {
             // Show table on desktop (≥992px)
             const tables = document.querySelectorAll('.bills-table-desktop');
@@ -745,29 +841,45 @@ function payBill(billId) {
         }
     }
     
-    // Run immediately
+    // Run immediately - before page loads
     hideTableOnMobile();
     
     // Run on load
-    window.addEventListener('load', hideTableOnMobile);
+    window.addEventListener('load', function() {
+        hideTableOnMobile();
+        setTimeout(hideTableOnMobile, 50);
+        setTimeout(hideTableOnMobile, 200);
+    });
     
     // Run on resize and orientation change
     window.addEventListener('resize', hideTableOnMobile);
     window.addEventListener('orientationchange', function() {
         setTimeout(hideTableOnMobile, 100);
+        setTimeout(hideTableOnMobile, 300);
+        setTimeout(hideTableOnMobile, 500);
     });
     
     // Run after DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', hideTableOnMobile);
+        document.addEventListener('DOMContentLoaded', function() {
+            hideTableOnMobile();
+            setTimeout(hideTableOnMobile, 50);
+            setTimeout(hideTableOnMobile, 200);
+            setTimeout(hideTableOnMobile, 500);
+        });
     } else {
+        hideTableOnMobile();
         setTimeout(hideTableOnMobile, 50);
+        setTimeout(hideTableOnMobile, 200);
+        setTimeout(hideTableOnMobile, 500);
     }
     
     // Run multiple times to ensure it works
     setTimeout(hideTableOnMobile, 100);
     setTimeout(hideTableOnMobile, 300);
     setTimeout(hideTableOnMobile, 500);
+    setTimeout(hideTableOnMobile, 1000);
+    setTimeout(hideTableOnMobile, 2000);
 })();
 
 // Show success/error messages
