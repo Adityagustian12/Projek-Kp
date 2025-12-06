@@ -23,19 +23,35 @@ class PublicController extends Controller
             }
         }
 
-        // Sync all room statuses first (force sync from database)
-        Room::chunk(50, function ($rooms) {
-            foreach ($rooms as $room) {
-                $room->syncStatus();
-            }
-        });
+        // Get rooms directly from database using raw query to bypass any caching
+        $roomIds = \DB::table('rooms')
+            ->orderByRaw("FIELD(status, 'available', 'occupied', 'maintenance')")
+            ->orderBy('room_number')
+            ->pluck('id');
         
-        // Get all rooms with fresh data from database
-        $rooms = Room::orderByRaw("FIELD(status, 'available', 'occupied', 'maintenance')")
+        // Load rooms fresh from database
+        $rooms = Room::whereIn('id', $roomIds)
+                    ->orderByRaw("FIELD(status, 'available', 'occupied', 'maintenance')")
                     ->orderBy('room_number')
                     ->get();
         
-        return view('public.home', compact('rooms'));
+        // Sync status for each room to ensure accuracy
+        foreach ($rooms as $room) {
+            $room->syncStatus();
+        }
+        
+        // Force refresh from database
+        $rooms = Room::whereIn('id', $roomIds)
+                    ->orderByRaw("FIELD(status, 'available', 'occupied', 'maintenance')")
+                    ->orderBy('room_number')
+                    ->get();
+        
+        // Add no-cache headers to ensure fresh data
+        return response()
+            ->view('public.home', compact('rooms'))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
 
