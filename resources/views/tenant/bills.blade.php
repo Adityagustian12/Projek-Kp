@@ -42,10 +42,10 @@
                     </div>
                     <div class="card-body">
                         @if($bills->count() > 0)
-                            <!-- Desktop Table View - Only for screens ≥992px (tablet landscape and desktop) -->
-                            <div class="d-none d-lg-block bills-table-desktop">
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-sm">
+                            <!-- Desktop Table View - Only for screens ≥992px (desktop only) -->
+                            <div class="d-none d-lg-block bills-table-desktop" style="display: none !important;">
+                                <div class="table-responsive" style="display: none !important;">
+                                    <table class="table table-hover table-sm" style="display: none !important;">
                                         <thead>
                                             <tr>
                                                 <th style="min-width: 80px;">#</th>
@@ -116,7 +116,7 @@
 
                             <!-- Mobile Card View - For all mobile screens (<992px) - NO TABLE -->
                             <!-- Works for both portrait and landscape orientation -->
-                            <div class="d-lg-none bills-card-mobile">
+                            <div class="d-lg-none bills-card-mobile" style="display: block !important; width: 100% !important; max-width: 100% !important;">
                                 @foreach($bills as $bill)
                                     <div class="card mb-3 shadow-sm border">
                                         <div class="card-body p-3">
@@ -349,8 +349,9 @@
 }
 
 /* Mobile & Tablet Responsive - Force card view, NO table - Works for portrait and landscape */
-@media screen and (max-width: 991px) {
-    /* Hide ALL tables on mobile/tablet - ULTRA AGGRESSIVE */
+/* Portrait mode - Force card view - NO SCROLL */
+@media screen and (max-width: 991px) and (orientation: portrait) {
+    /* Hide ALL tables on mobile portrait - ULTRA AGGRESSIVE */
     .bills-table-desktop,
     .bills-table-desktop *,
     .table-responsive,
@@ -361,7 +362,8 @@
     tr,
     th,
     td,
-    .d-none.d-lg-block {
+    .d-none.d-lg-block,
+    .d-none.d-md-block {
         display: none !important;
         visibility: hidden !important;
         width: 0 !important;
@@ -378,22 +380,32 @@
         display: block !important;
         visibility: visible !important;
         width: 100% !important;
+        max-width: 100% !important;
         position: relative !important;
         opacity: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
-    /* Prevent any horizontal overflow */
+    /* Prevent any horizontal overflow - AGGRESSIVE */
     .card-body,
     .container-fluid,
     .main-content,
     .card,
     .row,
     [class*="col-"],
-    .card-body > * {
+    .card-body > *,
+    .bills-card-mobile > *,
+    .bills-card-mobile .card,
+    .bills-card-mobile .card .card-body {
         overflow-x: hidden !important;
         max-width: 100% !important;
         width: 100% !important;
         box-sizing: border-box !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
     }
     
     html, body {
@@ -401,6 +413,8 @@
         max-width: 100vw !important;
         width: 100% !important;
         position: relative !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
     /* Ensure no element causes horizontal scroll */
@@ -409,12 +423,78 @@
         box-sizing: border-box !important;
     }
     
-    /* Force card to be full width */
+    /* Force card to be full width with proper padding */
     .bills-card-mobile .card {
         margin-left: 0 !important;
         margin-right: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    
+    .bills-card-mobile .card .card-body {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Ensure buttons don't cause overflow */
+    .bills-card-mobile .btn {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Ensure all text wraps */
+    .bills-card-mobile * {
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+}
+
+/* Landscape mode - Also use card view to be safe */
+@media screen and (max-width: 991px) and (orientation: landscape) {
+    /* Hide tables */
+    .bills-table-desktop,
+    .table-responsive,
+    .table {
+        display: none !important;
+    }
+    
+    /* Show card view */
+    .bills-card-mobile {
+        display: block !important;
+    }
+    
+    /* Prevent horizontal scroll */
+    html, body {
+        overflow-x: hidden !important;
+    }
+}
+
+/* General mobile - below 992px */
+@media screen and (max-width: 991px) {
+    /* Hide ALL tables */
+    .bills-table-desktop,
+    .bills-table-desktop *,
+    .table-responsive,
+    .table,
+    table {
+        display: none !important;
+    }
+    
+    /* Show card view */
+    .bills-card-mobile {
+        display: block !important;
+        width: 100% !important;
+    }
+    
+    /* Prevent horizontal scroll */
+    html, body, .container-fluid, .main-content {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
     }
 }
 
@@ -611,31 +691,46 @@ function payBill(billId) {
 (function() {
     function hideTableOnMobile() {
         // Use 992px breakpoint to match Bootstrap lg breakpoint
-        if (window.innerWidth < 992) {
-            // Hide all tables
-            const tables = document.querySelectorAll('.bills-table-desktop, .table-responsive, .table, table');
+        const isMobile = window.innerWidth < 992;
+        const isPortrait = window.innerHeight > window.innerWidth;
+        
+        if (isMobile) {
+            // Hide all tables - ULTRA AGGRESSIVE
+            const tables = document.querySelectorAll('.bills-table-desktop, .table-responsive, .table, table, thead, tbody');
             tables.forEach(function(table) {
                 if (table) {
-                    table.style.display = 'none !important';
-                    table.style.visibility = 'hidden !important';
-                    table.style.width = '0 !important';
-                    table.style.height = '0 !important';
-                    table.style.position = 'absolute !important';
-                    table.style.left = '-9999px !important';
+                    table.style.setProperty('display', 'none', 'important');
+                    table.style.setProperty('visibility', 'hidden', 'important');
+                    table.style.setProperty('width', '0', 'important');
+                    table.style.setProperty('height', '0', 'important');
+                    table.style.setProperty('position', 'absolute', 'important');
+                    table.style.setProperty('left', '-9999px', 'important');
+                    table.style.setProperty('opacity', '0', 'important');
+                    table.classList.add('d-none');
                 }
             });
             
             // Show card view
             const cardView = document.querySelector('.bills-card-mobile');
             if (cardView) {
-                cardView.style.display = 'block !important';
-                cardView.style.visibility = 'visible !important';
-                cardView.style.width = '100% !important';
+                cardView.style.setProperty('display', 'block', 'important');
+                cardView.style.setProperty('visibility', 'visible', 'important');
+                cardView.style.setProperty('width', '100%', 'important');
+                cardView.style.setProperty('max-width', '100%', 'important');
+                cardView.classList.remove('d-none');
             }
             
             // Prevent horizontal scroll
-            document.body.style.overflowX = 'hidden';
-            document.documentElement.style.overflowX = 'hidden';
+            document.body.style.setProperty('overflow-x', 'hidden', 'important');
+            document.documentElement.style.setProperty('overflow-x', 'hidden', 'important');
+            document.body.style.setProperty('max-width', '100vw', 'important');
+            document.documentElement.style.setProperty('max-width', '100vw', 'important');
+            
+            // Hide any table-responsive containers
+            const tableResponsive = document.querySelectorAll('.table-responsive');
+            tableResponsive.forEach(function(el) {
+                el.style.setProperty('display', 'none', 'important');
+            });
         } else {
             // Show table on desktop (≥992px)
             const tables = document.querySelectorAll('.bills-table-desktop');
@@ -645,6 +740,7 @@ function payBill(billId) {
                     table.style.visibility = 'visible';
                     table.style.position = 'relative';
                     table.style.left = '0';
+                    table.style.opacity = '1';
                 }
             });
             
@@ -656,18 +752,29 @@ function payBill(billId) {
         }
     }
     
-    // Run on load
+    // Run immediately
     hideTableOnMobile();
     
-    // Run on resize
+    // Run on load
+    window.addEventListener('load', hideTableOnMobile);
+    
+    // Run on resize and orientation change
     window.addEventListener('resize', hideTableOnMobile);
+    window.addEventListener('orientationchange', function() {
+        setTimeout(hideTableOnMobile, 100);
+    });
     
     // Run after DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', hideTableOnMobile);
     } else {
-        hideTableOnMobile();
+        setTimeout(hideTableOnMobile, 50);
     }
+    
+    // Run multiple times to ensure it works
+    setTimeout(hideTableOnMobile, 100);
+    setTimeout(hideTableOnMobile, 300);
+    setTimeout(hideTableOnMobile, 500);
 })();
 
 // Show success/error messages
