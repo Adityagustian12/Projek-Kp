@@ -237,6 +237,12 @@ class DashboardController extends Controller
             'status' => 'occupied',
             'capacity' => 1,
         ]);
+        
+        // Sync status to ensure consistency
+        $room->syncStatus();
+        
+        // Refresh room model to ensure changes are saved
+        $room->refresh();
 
         // Promote user to tenant if still seeker
         if ($booking->user->role === 'seeker') {

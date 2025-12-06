@@ -10,6 +10,7 @@ use App\Models\Complaint;
 use App\Policies\BillPolicy;
 use App\Policies\BookingPolicy;
 use App\Policies\ComplaintPolicy;
+use App\Observers\BookingObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,5 +30,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Bill::class, BillPolicy::class);
         Gate::policy(Booking::class, BookingPolicy::class);
         Gate::policy(Complaint::class, ComplaintPolicy::class);
+        
+        // Register Booking Observer for automatic room status sync
+        Booking::observe(BookingObserver::class);
     }
 }

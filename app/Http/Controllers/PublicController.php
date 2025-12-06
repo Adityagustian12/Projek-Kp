@@ -23,9 +23,15 @@ class PublicController extends Controller
             }
         }
 
+        // Get rooms and sync status to ensure accuracy
         $rooms = Room::orderByRaw("FIELD(status, 'available', 'occupied', 'maintenance')")
                     ->orderBy('room_number')
                     ->get();
+        
+        // Sync status for each room to ensure it matches booking status
+        foreach ($rooms as $room) {
+            $room->syncStatus();
+        }
         
         return view('public.home', compact('rooms'));
     }
