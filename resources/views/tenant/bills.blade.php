@@ -42,10 +42,10 @@
                     </div>
                     <div class="card-body">
                         @if($bills->count() > 0)
-                            <!-- Desktop Table View - Only for screens ≥768px -->
-                            <div class="d-none d-md-block bills-table-desktop" style="display: none;">
-                                <div class="table-responsive" style="display: none;">
-                                    <table class="table table-hover table-sm" style="display: none;">
+                            <!-- Desktop Table View - Only for screens ≥992px (tablet landscape and desktop) -->
+                            <div class="d-none d-lg-block bills-table-desktop">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm">
                                         <thead>
                                             <tr>
                                                 <th style="min-width: 80px;">#</th>
@@ -114,8 +114,9 @@
                                 </div>
                             </div>
 
-                            <!-- Mobile Card View - For all mobile screens (<768px) - NO TABLE -->
-                            <div class="d-md-none bills-card-mobile" style="display: block !important; width: 100% !important;">
+                            <!-- Mobile Card View - For all mobile screens (<992px) - NO TABLE -->
+                            <!-- Works for both portrait and landscape orientation -->
+                            <div class="d-lg-none bills-card-mobile">
                                 @foreach($bills as $bill)
                                     <div class="card mb-3 shadow-sm border">
                                         <div class="card-body p-3">
@@ -347,9 +348,9 @@
     margin-right: 0;
 }
 
-/* Mobile Responsive - Force card view, NO table - ULTRA AGGRESSIVE */
-@media screen and (max-width: 767px) {
-    /* Hide ALL tables on mobile - ULTRA AGGRESSIVE */
+/* Mobile & Tablet Responsive - Force card view, NO table - Works for portrait and landscape */
+@media screen and (max-width: 991px) {
+    /* Hide ALL tables on mobile/tablet - ULTRA AGGRESSIVE */
     .bills-table-desktop,
     .bills-table-desktop *,
     .table-responsive,
@@ -360,7 +361,7 @@
     tr,
     th,
     td,
-    .d-none.d-md-block {
+    .d-none.d-lg-block {
         display: none !important;
         visibility: hidden !important;
         width: 0 !important;
@@ -373,7 +374,7 @@
     
     /* Force card view to be visible */
     .bills-card-mobile,
-    .d-md-none {
+    .d-lg-none {
         display: block !important;
         visibility: visible !important;
         width: 100% !important;
@@ -417,8 +418,50 @@
     }
 }
 
-/* Desktop table - make it compact */
-@media screen and (min-width: 768px) {
+/* Extra safety for small screens in any orientation */
+@media screen and (max-width: 767px) {
+    /* Double check - hide any remaining tables */
+    .bills-table-desktop,
+    .table-responsive,
+    .table,
+    table {
+        display: none !important;
+    }
+    
+    /* Ensure card view */
+    .bills-card-mobile {
+        display: block !important;
+    }
+}
+
+/* Mobile landscape orientation - Force card view */
+@media screen and (max-width: 991px) and (orientation: landscape) {
+    .bills-table-desktop,
+    .table-responsive,
+    .table {
+        display: none !important;
+    }
+    
+    .bills-card-mobile {
+        display: block !important;
+    }
+}
+
+/* Mobile portrait orientation - Force card view */
+@media screen and (max-width: 991px) and (orientation: portrait) {
+    .bills-table-desktop,
+    .table-responsive,
+    .table {
+        display: none !important;
+    }
+    
+    .bills-card-mobile {
+        display: block !important;
+    }
+}
+
+/* Desktop table - make it compact (only for screens ≥992px) */
+@media screen and (min-width: 992px) {
     .table-sm th,
     .table-sm td {
         padding: 0.5rem 0.25rem !important;
@@ -438,6 +481,21 @@
     .table {
         width: 100% !important;
         table-layout: auto !important;
+    }
+}
+
+/* Tablet landscape - still use card view to avoid scroll */
+@media screen and (min-width: 768px) and (max-width: 991px) {
+    /* Hide table on tablet */
+    .bills-table-desktop,
+    .table-responsive,
+    .table {
+        display: none !important;
+    }
+    
+    /* Show card view */
+    .bills-card-mobile {
+        display: block !important;
     }
 }
     
@@ -549,10 +607,11 @@ function payBill(billId) {
     window.location.href = `/tenant/bills/${billId}/payment`;
 }
 
-// Force hide table on mobile - Run immediately
+// Force hide table on mobile - Run immediately (works for both portrait and landscape)
 (function() {
     function hideTableOnMobile() {
-        if (window.innerWidth < 768) {
+        // Use 992px breakpoint to match Bootstrap lg breakpoint
+        if (window.innerWidth < 992) {
             // Hide all tables
             const tables = document.querySelectorAll('.bills-table-desktop, .table-responsive, .table, table');
             tables.forEach(function(table) {
@@ -578,15 +637,18 @@ function payBill(billId) {
             document.body.style.overflowX = 'hidden';
             document.documentElement.style.overflowX = 'hidden';
         } else {
-            // Show table on desktop
+            // Show table on desktop (≥992px)
             const tables = document.querySelectorAll('.bills-table-desktop');
             tables.forEach(function(table) {
                 if (table) {
                     table.style.display = '';
+                    table.style.visibility = 'visible';
+                    table.style.position = 'relative';
+                    table.style.left = '0';
                 }
             });
             
-            // Hide card view
+            // Hide card view on desktop
             const cardView = document.querySelector('.bills-card-mobile');
             if (cardView) {
                 cardView.style.display = 'none';
