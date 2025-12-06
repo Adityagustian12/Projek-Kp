@@ -38,6 +38,73 @@
         .navbar.bg-primary .nav-link:focus {
             color: #e6e6e6 !important;
         }
+        
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 56px;
+                left: -100%;
+                width: 250px;
+                height: calc(100vh - 56px);
+                z-index: 1000;
+                transition: left 0.3s ease;
+                overflow-y: auto;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            }
+            .sidebar.show {
+                left: 0;
+            }
+            .main-content {
+                width: 100%;
+                padding: 1rem !important;
+            }
+            .container-fluid {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+            .card-body {
+                padding: 1rem !important;
+            }
+            h2 {
+                font-size: 1.5rem !important;
+            }
+            .badge.fs-6 {
+                font-size: 0.75rem !important;
+            }
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .d-flex.justify-content-between.align-items-center {
+                align-items: flex-start !important;
+            }
+            /* Overlay untuk mobile sidebar */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 56px;
+                left: 0;
+                width: 100%;
+                height: calc(100vh - 56px);
+                background-color: rgba(0,0,0,0.5);
+                z-index: 999;
+            }
+            .sidebar-overlay.show {
+                display: block;
+            }
+        }
+        
+        /* Mobile menu button */
+        .mobile-menu-btn {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: inline-block;
+                margin-right: 1rem;
+            }
+        }
     </style>
     
     @yield('styles')
@@ -46,6 +113,9 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
+            <button class="btn btn-link text-white mobile-menu-btn" type="button" id="mobileMenuBtn" onclick="toggleSidebar()">
+                <i class="fas fa-bars fa-lg"></i>
+            </button>
             <span class="navbar-brand">
                 <i class="fas fa-home me-2"></i>Kos-Kosan H.Kastim
             </span>
@@ -87,6 +157,9 @@
         </div>
     </nav>
 
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
     <!-- Main Content -->
     <main>
         @yield('content')
@@ -107,6 +180,30 @@
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+        
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar && overlay) {
+                sidebar.classList.toggle('show');
+                overlay.classList.toggle('show');
+            }
+        }
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.querySelector('.sidebar');
+            const menuBtn = document.getElementById('mobileMenuBtn');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('show')) {
+                if (!sidebar.contains(event.target) && !menuBtn.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                    if (overlay) overlay.classList.remove('show');
+                }
             }
         });
     </script>

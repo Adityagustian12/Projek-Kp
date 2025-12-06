@@ -6,7 +6,7 @@
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2 sidebar">
+        <div class="col-md-3 col-lg-2 sidebar" id="sidebar">
             <div class="p-3">
                 <h6 class="text-muted text-uppercase mb-3">Menu Penghuni</h6>
                 <nav class="nav flex-column">
