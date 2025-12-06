@@ -43,7 +43,7 @@
                     <div class="card-body">
                         @if($bills->count() > 0)
                             <!-- Desktop Table View -->
-                            <div class="d-none d-md-block">
+                            <div class="d-none d-lg-block">
                                 <div class="table-responsive">
                                     <table class="table table-hover">
                                         <thead>
@@ -115,9 +115,61 @@
                                     </table>
                                 </div>
                             </div>
+                            
+                            <!-- Tablet View (Medium screens) -->
+                            <div class="d-none d-md-block d-lg-none">
+                                @foreach($bills as $bill)
+                                    <div class="card mb-3 shadow-sm">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-3">
+                                                    <strong>#{{ $bill->id }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ $bill->room->room_number }}</small>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <small class="text-muted d-block">Periode</small>
+                                                    <strong>{{ \Carbon\Carbon::parse($bill->period_start)->format('d M') }} - {{ \Carbon\Carbon::parse($bill->period_end)->format('d M Y') }}</strong>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <small class="text-muted d-block">Jumlah</small>
+                                                    <strong class="text-primary">Rp {{ number_format($bill->total_amount, 0, ',', '.') }}</strong>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <small class="text-muted d-block">Jatuh Tempo</small>
+                                                    <strong>{{ \Carbon\Carbon::parse($bill->due_date)->format('d M Y') }}</strong>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    @if($bill->status === 'pending')
+                                                        <span class="badge bg-warning">Belum Dibayar</span>
+                                                    @elseif($bill->status === 'paid')
+                                                        <span class="badge bg-success">Sudah Dibayar</span>
+                                                    @elseif($bill->status === 'overdue')
+                                                        <span class="badge bg-danger">Terlambat</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">{{ ucfirst($bill->status) }}</span>
+                                                    @endif
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <div class="btn-group-vertical" role="group">
+                                                        <button class="btn btn-sm btn-outline-info mb-1" onclick="viewBill({{ $bill->id }})" title="Detail">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        @if($bill->status === 'pending' || $bill->status === 'overdue')
+                                                            <button class="btn btn-sm btn-outline-success" onclick="payBill({{ $bill->id }})" title="Bayar">
+                                                                <i class="fas fa-credit-card"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
 
-                            <!-- Mobile Card View - Full Information -->
-                            <div class="d-md-none">
+                            <!-- Mobile Card View - Full Information (No horizontal scroll needed) -->
+                            <div class="d-lg-none">
                                 @foreach($bills as $bill)
                                     <div class="card mb-3 shadow-sm border">
                                         <div class="card-body p-3">
@@ -206,14 +258,14 @@
                                                 </div>
                                             </div>
                                             
-                                            <!-- Tombol Aksi -->
+                                            <!-- Tombol Aksi - Selalu Terlihat, Tidak Perlu Scroll -->
                                             <div class="d-grid gap-2 mt-3 pt-3 border-top">
-                                                <button class="btn btn-outline-primary" onclick="viewBill({{ $bill->id }})">
+                                                <button class="btn btn-outline-primary btn-block" onclick="viewBill({{ $bill->id }})">
                                                     <i class="fas fa-eye me-2"></i>Lihat Detail Lengkap
                                                 </button>
                                                 @if($bill->status === 'pending' || $bill->status === 'overdue')
-                                                    <button class="btn btn-success" onclick="payBill({{ $bill->id }})">
-                                                        <i class="fas fa-credit-card me-2"></i>Bayar Tagihan
+                                                    <button class="btn btn-success btn-block" onclick="payBill({{ $bill->id }})">
+                                                        <i class="fas fa-credit-card me-2"></i>Bayar Tagihan Sekarang
                                                     </button>
                                                 @endif
                                             </div>
@@ -349,8 +401,19 @@
     margin-right: 0;
 }
 
-/* Mobile Responsive */
-@media (max-width: 767px) {
+/* Mobile Responsive - No horizontal scroll */
+@media (max-width: 991px) {
+    /* Force card view on mobile/tablet - hide table completely */
+    .d-none.d-lg-block .table-responsive,
+    .table-responsive {
+        display: none !important;
+    }
+    
+    /* Ensure card view is visible */
+    .d-lg-none {
+        display: block !important;
+    }
+    
     .main-content {
         padding: 1rem !important;
     }
@@ -381,13 +444,18 @@
         font-size: 0.85rem !important;
     }
     
-    /* Bill card mobile */
+    /* Bill card mobile - Full width, no scroll */
     .card.mb-3 {
         border: 1px solid #dee2e6;
+        width: 100%;
+        max-width: 100%;
+        overflow: visible !important;
     }
     
     .card.mb-3 .card-body {
         padding: 1rem !important;
+        width: 100%;
+        overflow: visible !important;
     }
     
     .card.mb-3 h5 {
@@ -409,6 +477,12 @@
     .card.mb-3 .btn {
         font-size: 0.875rem !important;
         padding: 0.6rem 1rem !important;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .card.mb-3 .btn:last-child {
+        margin-bottom: 0;
     }
     
     .card.mb-3 .d-flex.justify-content-between {
@@ -417,6 +491,22 @@
     
     .card.mb-3 strong {
         font-size: 0.95rem;
+    }
+    
+    /* Ensure no horizontal overflow */
+    .container-fluid {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+    }
+    
+    .row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    
+    [class*="col-"] {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
     }
 }
 </style>
