@@ -42,10 +42,10 @@
                     </div>
                     <div class="card-body">
                         @if($bills->count() > 0)
-                            <!-- Compact Table View for Desktop (≥992px) - All columns visible without scroll -->
-                            <div class="d-none d-md-block">
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-sm">
+                            <!-- Desktop Table View - Only for screens ≥768px -->
+                            <div class="d-none d-md-block bills-table-desktop" style="display: none;">
+                                <div class="table-responsive" style="display: none;">
+                                    <table class="table table-hover table-sm" style="display: none;">
                                         <thead>
                                             <tr>
                                                 <th style="min-width: 80px;">#</th>
@@ -114,8 +114,8 @@
                                 </div>
                             </div>
 
-                            <!-- Mobile Card View - For all mobile screens (<768px) -->
-                            <div class="d-md-none">
+                            <!-- Mobile Card View - For all mobile screens (<768px) - NO TABLE -->
+                            <div class="d-md-none bills-card-mobile" style="display: block !important; width: 100% !important;">
                                 @foreach($bills as $bill)
                                     <div class="card mb-3 shadow-sm border">
                                         <div class="card-body p-3">
@@ -347,20 +347,20 @@
     margin-right: 0;
 }
 
-/* Mobile Responsive - Force card view, NO table */
+/* Mobile Responsive - Force card view, NO table - ULTRA AGGRESSIVE */
 @media screen and (max-width: 767px) {
-    /* Hide ALL tables on mobile - AGGRESSIVE */
-    .card-body .table-responsive,
-    .card-body .table,
-    .card-body table,
-    .card-body thead,
-    .card-body tbody,
-    .card-body tr,
-    .card-body th,
-    .card-body td,
-    .d-none.d-md-block,
-    .d-none.d-lg-block,
-    .d-none.d-xl-block {
+    /* Hide ALL tables on mobile - ULTRA AGGRESSIVE */
+    .bills-table-desktop,
+    .bills-table-desktop *,
+    .table-responsive,
+    .table,
+    table,
+    thead,
+    tbody,
+    tr,
+    th,
+    td,
+    .d-none.d-md-block {
         display: none !important;
         visibility: hidden !important;
         width: 0 !important;
@@ -368,14 +368,17 @@
         overflow: hidden !important;
         position: absolute !important;
         left: -9999px !important;
+        opacity: 0 !important;
     }
     
     /* Force card view to be visible */
+    .bills-card-mobile,
     .d-md-none {
         display: block !important;
         visibility: visible !important;
         width: 100% !important;
         position: relative !important;
+        opacity: 1 !important;
     }
     
     /* Prevent any horizontal overflow */
@@ -384,22 +387,33 @@
     .main-content,
     .card,
     .row,
-    [class*="col-"] {
+    [class*="col-"],
+    .card-body > * {
         overflow-x: hidden !important;
         max-width: 100% !important;
         width: 100% !important;
+        box-sizing: border-box !important;
     }
     
     html, body {
         overflow-x: hidden !important;
         max-width: 100vw !important;
         width: 100% !important;
+        position: relative !important;
     }
     
     /* Ensure no element causes horizontal scroll */
     * {
         max-width: 100% !important;
         box-sizing: border-box !important;
+    }
+    
+    /* Force card to be full width */
+    .bills-card-mobile .card {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 }
 
@@ -534,6 +548,65 @@ function payBill(billId) {
     // Redirect to payment form
     window.location.href = `/tenant/bills/${billId}/payment`;
 }
+
+// Force hide table on mobile - Run immediately
+(function() {
+    function hideTableOnMobile() {
+        if (window.innerWidth < 768) {
+            // Hide all tables
+            const tables = document.querySelectorAll('.bills-table-desktop, .table-responsive, .table, table');
+            tables.forEach(function(table) {
+                if (table) {
+                    table.style.display = 'none !important';
+                    table.style.visibility = 'hidden !important';
+                    table.style.width = '0 !important';
+                    table.style.height = '0 !important';
+                    table.style.position = 'absolute !important';
+                    table.style.left = '-9999px !important';
+                }
+            });
+            
+            // Show card view
+            const cardView = document.querySelector('.bills-card-mobile');
+            if (cardView) {
+                cardView.style.display = 'block !important';
+                cardView.style.visibility = 'visible !important';
+                cardView.style.width = '100% !important';
+            }
+            
+            // Prevent horizontal scroll
+            document.body.style.overflowX = 'hidden';
+            document.documentElement.style.overflowX = 'hidden';
+        } else {
+            // Show table on desktop
+            const tables = document.querySelectorAll('.bills-table-desktop');
+            tables.forEach(function(table) {
+                if (table) {
+                    table.style.display = '';
+                }
+            });
+            
+            // Hide card view
+            const cardView = document.querySelector('.bills-card-mobile');
+            if (cardView) {
+                cardView.style.display = 'none';
+            }
+        }
+    }
+    
+    // Run on load
+    hideTableOnMobile();
+    
+    // Run on resize
+    window.addEventListener('resize', hideTableOnMobile);
+    
+    // Run after DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', hideTableOnMobile);
+    } else {
+        hideTableOnMobile();
+    }
+})();
 
 // Show success/error messages
 @if(session('success'))
