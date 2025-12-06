@@ -79,23 +79,37 @@ class Room extends Model
      */
     public function syncStatus(): bool
     {
-        // Reload bookings to get fresh data
-        $this->load('bookings');
+        // Force reload from database to get fresh data
+        $this->refresh();
         
-        $hasOccupiedBooking = $this->bookings()
+        // Get fresh bookings count directly from database
+        $occupiedBookingsCount = \DB::table('bookings')
+            ->where('room_id', $this->id)
             ->where('status', 'occupied')
-            ->exists();
+            ->count();
+        
+        $pendingBookingsCount = \DB::table('bookings')
+            ->where('room_id', $this->id)
+            ->where('status', 'pending')
+            ->count();
+        
+        $confirmedBookingsCount = \DB::table('bookings')
+            ->where('room_id', $this->id)
+            ->where('status', 'confirmed')
+            ->count();
 
         $oldStatus = $this->status;
         $updates = [];
 
-        if ($hasOccupiedBooking) {
-            // If there's an occupied booking, room must be occupied
+        // If there's an occupied booking, room MUST be occupied
+        if ($occupiedBookingsCount > 0) {
             if ($this->status !== 'occupied') {
                 $updates['status'] = 'occupied';
                 // Store original capacity if not already stored
-                if (!$this->original_capacity) {
-                    $updates['original_capacity'] = $this->capacity;
+                $currentCapacity = \DB::table('rooms')->where('id', $this->id)->value('capacity');
+                $currentOriginalCapacity = \DB::table('rooms')->where('id', $this->id)->value('original_capacity');
+                if (!$currentOriginalCapacity) {
+                    $updates['original_capacity'] = $currentCapacity;
                 }
                 $updates['capacity'] = 1;
             }
@@ -103,15 +117,12 @@ class Room extends Model
             // No occupied booking
             if ($this->status === 'occupied') {
                 // Check if there are any pending/confirmed bookings
-                $hasActiveBooking = $this->bookings()
-                    ->whereIn('status', ['pending', 'confirmed'])
-                    ->exists();
-                
-                if (!$hasActiveBooking) {
+                if ($pendingBookingsCount == 0 && $confirmedBookingsCount == 0) {
                     // No active bookings, room becomes available
                     $updates['status'] = 'available';
                     // Restore original capacity
-                    $updates['capacity'] = $this->original_capacity ?? 1;
+                    $currentOriginalCapacity = \DB::table('rooms')->where('id', $this->id)->value('original_capacity');
+                    $updates['capacity'] = $currentOriginalCapacity ?? 1;
                     $updates['original_capacity'] = null;
                 }
             }
@@ -120,7 +131,7 @@ class Room extends Model
         // Only update if there are changes
         if (!empty($updates)) {
             // Use query builder to avoid triggering model events
-            static::where('id', $this->id)->update($updates);
+            \DB::table('rooms')->where('id', $this->id)->update($updates);
             // Refresh model attributes
             $this->refresh();
             return true;
