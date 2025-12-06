@@ -116,20 +116,20 @@
                                 </div>
                             </div>
 
-                            <!-- Mobile Card View -->
+                            <!-- Mobile Card View - Full Information -->
                             <div class="d-md-none">
                                 @foreach($bills as $bill)
-                                    <div class="card mb-3 shadow-sm">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="card mb-3 shadow-sm border">
+                                        <div class="card-body p-3">
+                                            <!-- Header dengan Status -->
+                                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
                                                 <div>
-                                                    <h6 class="mb-1 text-muted">Tagihan #{{ $bill->id }}</h6>
-                                                    <h5 class="mb-0">{{ $bill->room->room_number }}</h5>
-                                                    <small class="text-muted">Rp {{ number_format($bill->room->price, 0, ',', '.') }}/bulan</small>
+                                                    <h6 class="mb-0 fw-bold">Tagihan #{{ $bill->id }}</h6>
+                                                    <small class="text-muted">{{ $bill->room->room_number }}</small>
                                                 </div>
                                                 <div>
                                                     @if($bill->status === 'pending')
-                                                        <span class="badge bg-warning">Belum Dibayar</span>
+                                                        <span class="badge bg-warning text-dark">Belum Dibayar</span>
                                                     @elseif($bill->status === 'paid')
                                                         <span class="badge bg-success">Sudah Dibayar</span>
                                                     @elseif($bill->status === 'overdue')
@@ -140,46 +140,82 @@
                                                 </div>
                                             </div>
                                             
-                                            <div class="border-top pt-3 mb-3">
+                                            <!-- Informasi Lengkap -->
+                                            <div class="mb-3">
+                                                <!-- Jumlah Tagihan - Paling Menonjol -->
+                                                <div class="bg-light rounded p-2 mb-3 text-center">
+                                                    <small class="text-muted d-block mb-1">Jumlah Tagihan</small>
+                                                    <h4 class="mb-0 text-primary fw-bold">Rp {{ number_format($bill->total_amount, 0, ',', '.') }}</h4>
+                                                </div>
+                                                
+                                                <!-- Detail Informasi -->
                                                 <div class="row g-2">
-                                                    <div class="col-6">
-                                                        <small class="text-muted d-block">Periode</small>
-                                                        <strong>{{ \Carbon\Carbon::parse($bill->period_start)->format('d M') }} - {{ \Carbon\Carbon::parse($bill->period_end)->format('d M Y') }}</strong>
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between py-2 border-bottom">
+                                                            <span class="text-muted">Kamar</span>
+                                                            <strong>{{ $bill->room->room_number }}</strong>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-6">
-                                                        <small class="text-muted d-block">Jatuh Tempo</small>
-                                                        <strong>{{ \Carbon\Carbon::parse($bill->due_date)->format('d M Y') }}</strong>
-                                                        @if($bill->status === 'overdue')
-                                                            @php
-                                                                $daysLate = \Carbon\Carbon::parse($bill->due_date)->startOfDay()->diffInDays(now()->startOfDay(), false);
-                                                            @endphp
-                                                            <br><small class="text-danger">Terlambat {{ max(0, (int) $daysLate) }} hari</small>
-                                                        @elseif($bill->status === 'pending')
-                                                            @php
-                                                                $daysLeft = \Carbon\Carbon::now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($bill->due_date)->startOfDay(), false);
-                                                            @endphp
-                                                            <br><small class="text-warning">{{ $daysLeft > 0 ? (int) $daysLeft . ' hari lagi' : 'Hari ini' }}</small>
-                                                        @endif
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between py-2 border-bottom">
+                                                            <span class="text-muted">Harga Kamar</span>
+                                                            <strong>Rp {{ number_format($bill->room->price, 0, ',', '.') }}/bulan</strong>
+                                                        </div>
                                                     </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between py-2 border-bottom">
+                                                            <span class="text-muted">Periode</span>
+                                                            <strong>{{ \Carbon\Carbon::parse($bill->period_start)->format('d M Y') }} - {{ \Carbon\Carbon::parse($bill->period_end)->format('d M Y') }}</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between py-2 border-bottom">
+                                                            <span class="text-muted">Jatuh Tempo</span>
+                                                            <div class="text-end">
+                                                                <strong>{{ \Carbon\Carbon::parse($bill->due_date)->format('d M Y') }}</strong>
+                                                                @if($bill->status === 'overdue')
+                                                                    @php
+                                                                        $daysLate = \Carbon\Carbon::parse($bill->due_date)->startOfDay()->diffInDays(now()->startOfDay(), false);
+                                                                    @endphp
+                                                                    <br><small class="text-danger">Terlambat {{ max(0, (int) $daysLate) }} hari</small>
+                                                                @elseif($bill->status === 'pending')
+                                                                    @php
+                                                                        $daysLeft = \Carbon\Carbon::now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($bill->due_date)->startOfDay(), false);
+                                                                    @endphp
+                                                                    <br><small class="text-warning">{{ $daysLeft > 0 ? (int) $daysLeft . ' hari lagi' : 'Hari ini jatuh tempo' }}</small>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    @if($bill->late_fee > 0)
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between py-2 border-bottom">
+                                                            <span class="text-muted">Denda Keterlambatan</span>
+                                                            <strong class="text-danger">Rp {{ number_format($bill->late_fee, 0, ',', '.') }}</strong>
+                                                        </div>
+                                                    </div>
+                                                    @endif
+                                                    @if($bill->paid_at)
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between py-2">
+                                                            <span class="text-muted">Tanggal Dibayar</span>
+                                                            <strong>{{ \Carbon\Carbon::parse($bill->paid_at)->format('d M Y H:i') }}</strong>
+                                                        </div>
+                                                    </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                             
-                                            <div class="border-top pt-3">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span class="text-muted">Jumlah Tagihan</span>
-                                                    <h4 class="mb-0 text-primary">Rp {{ number_format($bill->total_amount, 0, ',', '.') }}</h4>
-                                                </div>
-                                                
-                                                <div class="d-grid gap-2 mt-3">
-                                                    <button class="btn btn-outline-primary btn-sm" onclick="viewBill({{ $bill->id }})">
-                                                        <i class="fas fa-eye me-2"></i>Lihat Detail
+                                            <!-- Tombol Aksi -->
+                                            <div class="d-grid gap-2 mt-3 pt-3 border-top">
+                                                <button class="btn btn-outline-primary" onclick="viewBill({{ $bill->id }})">
+                                                    <i class="fas fa-eye me-2"></i>Lihat Detail Lengkap
+                                                </button>
+                                                @if($bill->status === 'pending' || $bill->status === 'overdue')
+                                                    <button class="btn btn-success" onclick="payBill({{ $bill->id }})">
+                                                        <i class="fas fa-credit-card me-2"></i>Bayar Tagihan
                                                     </button>
-                                                    @if($bill->status === 'pending' || $bill->status === 'overdue')
-                                                        <button class="btn btn-success btn-sm" onclick="payBill({{ $bill->id }})">
-                                                            <i class="fas fa-credit-card me-2"></i>Bayar Tagihan
-                                                        </button>
-                                                    @endif
-                                                </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -359,12 +395,28 @@
     }
     
     .card.mb-3 h4 {
-        font-size: 1.2rem !important;
+        font-size: 1.3rem !important;
+    }
+    
+    .card.mb-3 h6 {
+        font-size: 0.95rem !important;
+    }
+    
+    .card.mb-3 .bg-light {
+        background-color: #f8f9fa !important;
     }
     
     .card.mb-3 .btn {
         font-size: 0.875rem !important;
-        padding: 0.5rem 0.75rem !important;
+        padding: 0.6rem 1rem !important;
+    }
+    
+    .card.mb-3 .d-flex.justify-content-between {
+        font-size: 0.9rem;
+    }
+    
+    .card.mb-3 strong {
+        font-size: 0.95rem;
     }
 }
 </style>
