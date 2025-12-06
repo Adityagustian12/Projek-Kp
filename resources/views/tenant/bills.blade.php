@@ -120,101 +120,86 @@
                                 @foreach($bills as $bill)
                                     <div class="card mb-3 shadow-sm border">
                                         <div class="card-body p-3">
-                                            <!-- Header dengan Status -->
-                                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold">Tagihan #{{ $bill->id }}</h6>
-                                                    <small class="text-muted">{{ $bill->room->room_number }}</small>
-                                                </div>
-                                                <div>
+                                            <!-- Header dengan Status dan Tombol Aksi di Atas -->
+                                            <div class="d-flex justify-content-between align-items-start mb-3 pb-2 border-bottom">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1 fw-bold">Tagihan #{{ $bill->id }}</h6>
+                                                    <small class="text-muted d-block">{{ $bill->room->room_number }}</small>
                                                     @if($bill->status === 'pending')
-                                                        <span class="badge bg-warning text-dark">Belum Dibayar</span>
+                                                        <span class="badge bg-warning text-dark mt-1">Belum Dibayar</span>
                                                     @elseif($bill->status === 'paid')
-                                                        <span class="badge bg-success">Sudah Dibayar</span>
+                                                        <span class="badge bg-success mt-1">Sudah Dibayar</span>
                                                     @elseif($bill->status === 'overdue')
-                                                        <span class="badge bg-danger">Terlambat</span>
+                                                        <span class="badge bg-danger mt-1">Terlambat</span>
                                                     @else
-                                                        <span class="badge bg-secondary">{{ ucfirst($bill->status) }}</span>
+                                                        <span class="badge bg-secondary mt-1">{{ ucfirst($bill->status) }}</span>
+                                                    @endif
+                                                </div>
+                                                <!-- Tombol Aksi di Samping Header - Langsung Terlihat -->
+                                                <div class="ms-2 d-flex flex-column gap-1">
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="viewBill({{ $bill->id }})" title="Detail" style="white-space: nowrap; min-width: auto;">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    @if($bill->status === 'pending' || $bill->status === 'overdue')
+                                                        <button class="btn btn-sm btn-success" onclick="payBill({{ $bill->id }})" title="Bayar" style="white-space: nowrap; min-width: auto;">
+                                                            <i class="fas fa-credit-card"></i>
+                                                        </button>
                                                     @endif
                                                 </div>
                                             </div>
                                             
                                             <!-- Informasi Lengkap -->
-                                            <div class="mb-3">
+                                            <div class="mb-2">
                                                 <!-- Jumlah Tagihan - Paling Menonjol -->
-                                                <div class="bg-light rounded p-2 mb-3 text-center">
+                                                <div class="bg-light rounded p-2 mb-2 text-center">
                                                     <small class="text-muted d-block mb-1">Jumlah Tagihan</small>
-                                                    <h4 class="mb-0 text-primary fw-bold">Rp {{ number_format($bill->total_amount, 0, ',', '.') }}</h4>
+                                                    <h5 class="mb-0 text-primary fw-bold">Rp {{ number_format($bill->total_amount, 0, ',', '.') }}</h5>
                                                 </div>
                                                 
-                                                <!-- Detail Informasi -->
-                                                <div class="row g-2">
-                                                    <div class="col-12">
-                                                        <div class="d-flex justify-content-between py-2 border-bottom">
-                                                            <span class="text-muted">Kamar</span>
-                                                            <strong>{{ $bill->room->room_number }}</strong>
-                                                        </div>
+                                                <!-- Detail Informasi - Compact -->
+                                                <div class="small">
+                                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                                        <span class="text-muted">Kamar:</span>
+                                                        <strong>{{ $bill->room->room_number }}</strong>
                                                     </div>
-                                                    <div class="col-12">
-                                                        <div class="d-flex justify-content-between py-2 border-bottom">
-                                                            <span class="text-muted">Harga Kamar</span>
-                                                            <strong>Rp {{ number_format($bill->room->price, 0, ',', '.') }}/bulan</strong>
-                                                        </div>
+                                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                                        <span class="text-muted">Harga:</span>
+                                                        <strong>Rp {{ number_format($bill->room->price, 0, ',', '.') }}/bln</strong>
                                                     </div>
-                                                    <div class="col-12">
-                                                        <div class="d-flex justify-content-between py-2 border-bottom">
-                                                            <span class="text-muted">Periode</span>
-                                                            <strong>{{ \Carbon\Carbon::parse($bill->period_start)->format('d M Y') }} - {{ \Carbon\Carbon::parse($bill->period_end)->format('d M Y') }}</strong>
-                                                        </div>
+                                                    <div class="d-flex justify-content-between py-1 border-bottom">
+                                                        <span class="text-muted">Periode:</span>
+                                                        <strong class="text-end" style="font-size: 0.85rem;">{{ \Carbon\Carbon::parse($bill->period_start)->format('d M') }} - {{ \Carbon\Carbon::parse($bill->period_end)->format('d M Y') }}</strong>
                                                     </div>
-                                                    <div class="col-12">
-                                                        <div class="d-flex justify-content-between py-2 border-bottom">
-                                                            <span class="text-muted">Jatuh Tempo</span>
-                                                            <div class="text-end">
-                                                                <strong>{{ \Carbon\Carbon::parse($bill->due_date)->format('d M Y') }}</strong>
-                                                                @if($bill->status === 'overdue')
-                                                                    @php
-                                                                        $daysLate = \Carbon\Carbon::parse($bill->due_date)->startOfDay()->diffInDays(now()->startOfDay(), false);
-                                                                    @endphp
-                                                                    <br><small class="text-danger">Terlambat {{ max(0, (int) $daysLate) }} hari</small>
-                                                                @elseif($bill->status === 'pending')
-                                                                    @php
-                                                                        $daysLeft = \Carbon\Carbon::now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($bill->due_date)->startOfDay(), false);
-                                                                    @endphp
-                                                                    <br><small class="text-warning">{{ $daysLeft > 0 ? (int) $daysLeft . ' hari lagi' : 'Hari ini jatuh tempo' }}</small>
-                                                                @endif
-                                                            </div>
+                                                    <div class="d-flex justify-content-between py-1">
+                                                        <span class="text-muted">Jatuh Tempo:</span>
+                                                        <div class="text-end">
+                                                            <strong style="font-size: 0.85rem;">{{ \Carbon\Carbon::parse($bill->due_date)->format('d M Y') }}</strong>
+                                                            @if($bill->status === 'overdue')
+                                                                @php
+                                                                    $daysLate = \Carbon\Carbon::parse($bill->due_date)->startOfDay()->diffInDays(now()->startOfDay(), false);
+                                                                @endphp
+                                                                <br><small class="text-danger" style="font-size: 0.75rem;">+{{ max(0, (int) $daysLate) }}hr</small>
+                                                            @elseif($bill->status === 'pending')
+                                                                @php
+                                                                    $daysLeft = \Carbon\Carbon::now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($bill->due_date)->startOfDay(), false);
+                                                                @endphp
+                                                                <br><small class="text-warning" style="font-size: 0.75rem;">{{ $daysLeft > 0 ? (int) $daysLeft . 'hr' : 'Hari ini' }}</small>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                     @if($bill->late_fee > 0)
-                                                    <div class="col-12">
-                                                        <div class="d-flex justify-content-between py-2 border-bottom">
-                                                            <span class="text-muted">Denda Keterlambatan</span>
-                                                            <strong class="text-danger">Rp {{ number_format($bill->late_fee, 0, ',', '.') }}</strong>
-                                                        </div>
+                                                    <div class="d-flex justify-content-between py-1 border-top">
+                                                        <span class="text-muted">Denda:</span>
+                                                        <strong class="text-danger">Rp {{ number_format($bill->late_fee, 0, ',', '.') }}</strong>
                                                     </div>
                                                     @endif
                                                     @if($bill->paid_at)
-                                                    <div class="col-12">
-                                                        <div class="d-flex justify-content-between py-2">
-                                                            <span class="text-muted">Tanggal Dibayar</span>
-                                                            <strong>{{ \Carbon\Carbon::parse($bill->paid_at)->format('d M Y H:i') }}</strong>
-                                                        </div>
+                                                    <div class="d-flex justify-content-between py-1 border-top">
+                                                        <span class="text-muted">Dibayar:</span>
+                                                        <strong style="font-size: 0.85rem;">{{ \Carbon\Carbon::parse($bill->paid_at)->format('d M Y H:i') }}</strong>
                                                     </div>
                                                     @endif
                                                 </div>
-                                            </div>
-                                            
-                                            <!-- Tombol Aksi - Selalu Terlihat, Tidak Perlu Scroll -->
-                                            <div class="d-grid gap-2 mt-3 pt-3 border-top">
-                                                <button class="btn btn-outline-primary btn-block" onclick="viewBill({{ $bill->id }})">
-                                                    <i class="fas fa-eye me-2"></i>Lihat Detail Lengkap
-                                                </button>
-                                                @if($bill->status === 'pending' || $bill->status === 'overdue')
-                                                    <button class="btn btn-success btn-block" onclick="payBill({{ $bill->id }})">
-                                                        <i class="fas fa-credit-card me-2"></i>Bayar Tagihan Sekarang
-                                                    </button>
-                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -609,7 +594,7 @@
         font-size: 0.85rem !important;
     }
     
-    /* Bill card mobile - Full width, no scroll */
+    /* Bill card mobile - Full width, no scroll, compact layout */
     .card.mb-3 {
         border: 1px solid #dee2e6;
         width: 100%;
@@ -618,7 +603,7 @@
     }
     
     .card.mb-3 .card-body {
-        padding: 1rem !important;
+        padding: 0.75rem !important;
         width: 100%;
         overflow: visible !important;
     }
@@ -627,35 +612,43 @@
         font-size: 1.1rem !important;
     }
     
-    .card.mb-3 h4 {
-        font-size: 1.3rem !important;
-    }
-    
     .card.mb-3 h6 {
-        font-size: 0.95rem !important;
+        font-size: 0.9rem !important;
+        margin-bottom: 0.25rem !important;
     }
     
     .card.mb-3 .bg-light {
         background-color: #f8f9fa !important;
+        padding: 0.5rem !important;
     }
     
-    .card.mb-3 .btn {
-        font-size: 0.875rem !important;
-        padding: 0.6rem 1rem !important;
-        width: 100%;
-        margin-bottom: 0.5rem;
+    .card.mb-3 .bg-light h5 {
+        font-size: 1rem !important;
     }
     
-    .card.mb-3 .btn:last-child {
-        margin-bottom: 0;
+    /* Tombol aksi di header - compact */
+    .card.mb-3 .btn-sm {
+        font-size: 0.75rem !important;
+        padding: 0.25rem 0.5rem !important;
+        min-width: 36px !important;
+    }
+    
+    /* Detail informasi - compact */
+    .card.mb-3 .small {
+        font-size: 0.8rem !important;
     }
     
     .card.mb-3 .d-flex.justify-content-between {
-        font-size: 0.9rem;
+        font-size: 0.8rem !important;
+        padding: 0.25rem 0 !important;
     }
     
     .card.mb-3 strong {
-        font-size: 0.95rem;
+        font-size: 0.85rem !important;
+    }
+    
+    .card.mb-3 .text-muted {
+        font-size: 0.75rem !important;
     }
     
     /* Ensure no horizontal overflow */
