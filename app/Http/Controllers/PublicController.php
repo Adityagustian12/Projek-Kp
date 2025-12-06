@@ -46,12 +46,7 @@ class PublicController extends Controller
                     ->orderBy('room_number')
                     ->get();
         
-        // Add no-cache headers to ensure fresh data
-        return response()
-            ->view('public.home', compact('rooms'))
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
+        return view('public.home', compact('rooms'));
     }
 
 

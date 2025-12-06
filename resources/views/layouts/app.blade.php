@@ -113,12 +113,20 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <button class="btn btn-link text-white mobile-menu-btn" type="button" id="mobileMenuBtn" onclick="toggleSidebar()">
-                <i class="fas fa-bars fa-lg"></i>
-            </button>
-            <span class="navbar-brand">
-                <i class="fas fa-home me-2"></i>Kos-Kosan H.Kastim
-            </span>
+            @if(request()->routeIs('public.home'))
+                {{-- Hide mobile menu button on home page --}}
+                <span class="navbar-brand">
+                    <i class="fas fa-home me-2"></i>Kos-Kosan H.Kastim
+                </span>
+            @else
+                {{-- Show mobile menu button on other pages --}}
+                <button class="btn btn-link text-white mobile-menu-btn" type="button" id="mobileMenuBtn" onclick="toggleSidebar()">
+                    <i class="fas fa-bars fa-lg"></i>
+                </button>
+                <span class="navbar-brand">
+                    <i class="fas fa-home me-2"></i>Kos-Kosan H.Kastim
+                </span>
+            @endif
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -157,8 +165,10 @@
         </div>
     </nav>
 
-    <!-- Sidebar Overlay for Mobile -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <!-- Sidebar Overlay for Mobile (only show on pages with sidebar) -->
+    @if(!request()->routeIs('public.home'))
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    @endif
 
     <!-- Main Content -->
     <main>
@@ -183,7 +193,7 @@
             }
         });
         
-        // Mobile sidebar toggle
+        // Mobile sidebar toggle (only on pages with sidebar)
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -199,7 +209,8 @@
             const menuBtn = document.getElementById('mobileMenuBtn');
             const overlay = document.getElementById('sidebarOverlay');
             
-            if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('show')) {
+            // Only handle sidebar on pages that have it (not home page)
+            if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('show') && menuBtn) {
                 if (!sidebar.contains(event.target) && !menuBtn.contains(event.target)) {
                     sidebar.classList.remove('show');
                     if (overlay) overlay.classList.remove('show');

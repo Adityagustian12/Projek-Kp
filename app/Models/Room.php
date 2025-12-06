@@ -97,6 +97,10 @@ class Room extends Model
 
         // Get current room data directly from database
         $currentRoom = \DB::table('rooms')->where('id', $this->id)->first();
+        if (!$currentRoom) {
+            return false; // Room doesn't exist
+        }
+        
         $currentStatus = $currentRoom->status ?? 'available';
         $currentCapacity = $currentRoom->capacity ?? 1;
         $currentOriginalCapacity = $currentRoom->original_capacity ?? null;
@@ -105,10 +109,11 @@ class Room extends Model
 
         // If there's an occupied booking, room MUST be occupied
         if ($occupiedBookingsCount > 0) {
+            // Always update to occupied if there's an occupied booking
             if ($currentStatus !== 'occupied') {
                 $updates['status'] = 'occupied';
                 // Store original capacity if not already stored
-                if (!$currentOriginalCapacity) {
+                if (!$currentOriginalCapacity && $currentCapacity > 0) {
                     $updates['original_capacity'] = $currentCapacity;
                 }
                 $updates['capacity'] = 1;
