@@ -60,14 +60,20 @@
                 padding: 1rem !important;
             }
             .container-fluid {
-                padding-left: 0.5rem;
-                padding-right: 0.5rem;
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
             }
             .card-body {
                 padding: 1rem !important;
             }
-            h2 {
+            h1.display-4 {
                 font-size: 1.5rem !important;
+                line-height: 1.3 !important;
+                padding: 1.5rem 0.5rem !important;
+            }
+            h2 {
+                font-size: 1.25rem !important;
+                margin-bottom: 1rem !important;
             }
             .badge.fs-6 {
                 font-size: 0.75rem !important;
@@ -92,6 +98,60 @@
             }
             .sidebar-overlay.show {
                 display: block;
+            }
+            /* Navbar adjustments */
+            .navbar-brand {
+                font-size: 1rem !important;
+            }
+            .navbar .container {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
+            /* Card adjustments for mobile */
+            .card {
+                margin-bottom: 1rem;
+            }
+            .card-img-top {
+                height: 180px !important;
+            }
+            .card-title {
+                font-size: 1.1rem !important;
+            }
+            .card-text {
+                font-size: 0.875rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            .card-footer {
+                padding: 0.75rem !important;
+            }
+            .card-footer .btn {
+                font-size: 0.875rem !important;
+                padding: 0.5rem 0.75rem !important;
+            }
+            /* Price and status adjustments */
+            h4.text-primary {
+                font-size: 1.1rem !important;
+            }
+            .status-badge {
+                font-size: 0.75rem !important;
+                padding: 0.25rem 0.5rem !important;
+            }
+            /* Button adjustments */
+            .btn {
+                font-size: 0.875rem !important;
+                padding: 0.5rem 1rem !important;
+            }
+            .btn i {
+                font-size: 0.875rem !important;
+            }
+            /* Row spacing */
+            .row.py-4 {
+                padding-top: 1rem !important;
+                padding-bottom: 1rem !important;
+            }
+            .row.py-5 {
+                padding-top: 1.5rem !important;
+                padding-bottom: 1.5rem !important;
             }
         }
         
