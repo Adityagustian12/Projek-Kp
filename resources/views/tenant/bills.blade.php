@@ -42,19 +42,19 @@
                     </div>
                     <div class="card-body">
                         @if($bills->count() > 0)
-                            <!-- Desktop Table View - Only for XL screens (≥1200px) -->
-                            <div class="d-none d-xl-block" style="display: none !important;">
-                                <div class="table-responsive" style="display: none !important;">
-                                    <table class="table table-hover" style="display: none !important;">
+                            <!-- Compact Table View for Desktop (≥992px) - All columns visible without scroll -->
+                            <div class="d-none d-md-block">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm">
                                         <thead>
                                             <tr>
-                                                <th>No. Tagihan</th>
-                                                <th>Kamar</th>
-                                                <th>Periode</th>
-                                                <th>Jumlah Tagihan</th>
-                                                <th>Jatuh Tempo</th>
-                                                <th>Status</th>
-                                                <th>Aksi</th>
+                                                <th style="min-width: 80px;">#</th>
+                                                <th style="min-width: 120px;">Kamar</th>
+                                                <th style="min-width: 140px;">Periode</th>
+                                                <th style="min-width: 120px;">Jumlah</th>
+                                                <th style="min-width: 120px;">Jatuh Tempo</th>
+                                                <th style="min-width: 100px;">Status</th>
+                                                <th style="min-width: 100px;">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -62,48 +62,46 @@
                                                 <tr>
                                                     <td><strong>#{{ $bill->id }}</strong></td>
                                                     <td>
-                                                        <strong>{{ $bill->room->room_number }}</strong>
+                                                        <strong class="small">{{ $bill->room->room_number }}</strong>
                                                         <br>
-                                                        <small class="text-muted">Rp {{ number_format($bill->room->price, 0, ',', '.') }}/bulan</small>
+                                                        <small class="text-muted" style="font-size: 0.75rem;">Rp {{ number_format($bill->room->price, 0, ',', '.') }}/bln</small>
                                                     </td>
                                                     <td>
-                                                        <strong>{{ \Carbon\Carbon::parse($bill->period_start)->format('d M') }} - {{ \Carbon\Carbon::parse($bill->period_end)->format('d M Y') }}</strong>
+                                                        <small><strong>{{ \Carbon\Carbon::parse($bill->period_start)->format('d M') }} - {{ \Carbon\Carbon::parse($bill->period_end)->format('d M Y') }}</strong></small>
                                                     </td>
-                                                    <td><strong>Rp {{ number_format($bill->total_amount, 0, ',', '.') }}</strong></td>
+                                                    <td><strong class="text-primary">Rp {{ number_format($bill->total_amount, 0, ',', '.') }}</strong></td>
                                                     <td>
-                                                        <strong>{{ \Carbon\Carbon::parse($bill->due_date)->format('d M Y') }}</strong>
+                                                        <small><strong>{{ \Carbon\Carbon::parse($bill->due_date)->format('d M Y') }}</strong></small>
                                                         @if($bill->status === 'overdue')
-                                                            <br>
                                                             @php
                                                                 $daysLate = \Carbon\Carbon::parse($bill->due_date)->startOfDay()->diffInDays(now()->startOfDay(), false);
                                                             @endphp
-                                                            <small class="text-danger">Terlambat {{ max(0, (int) $daysLate) }} hari</small>
+                                                            <br><small class="text-danger" style="font-size: 0.7rem;">+{{ max(0, (int) $daysLate) }}hr</small>
                                                         @elseif($bill->status === 'pending')
-                                                            <br>
                                                             @php
                                                                 $daysLeft = \Carbon\Carbon::now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($bill->due_date)->startOfDay(), false);
                                                             @endphp
-                                                            <small class="text-warning">{{ $daysLeft > 0 ? (int) $daysLeft . ' hari lagi' : 'Hari ini' }}</small>
+                                                            <br><small class="text-warning" style="font-size: 0.7rem;">{{ $daysLeft > 0 ? (int) $daysLeft . 'hr' : 'Hari ini' }}</small>
                                                         @endif
                                                     </td>
                                                     <td>
                                                         @if($bill->status === 'pending')
-                                                            <span class="badge bg-warning">Belum Dibayar</span>
+                                                            <span class="badge bg-warning" style="font-size: 0.75rem;">Belum</span>
                                                         @elseif($bill->status === 'paid')
-                                                            <span class="badge bg-success">Sudah Dibayar</span>
+                                                            <span class="badge bg-success" style="font-size: 0.75rem;">Lunas</span>
                                                         @elseif($bill->status === 'overdue')
-                                                            <span class="badge bg-danger">Terlambat</span>
+                                                            <span class="badge bg-danger" style="font-size: 0.75rem;">Telat</span>
                                                         @else
-                                                            <span class="badge bg-secondary">{{ ucfirst($bill->status) }}</span>
+                                                            <span class="badge bg-secondary" style="font-size: 0.75rem;">{{ ucfirst($bill->status) }}</span>
                                                         @endif
                                                     </td>
                                                     <td>
-                                                        <div class="btn-group" role="group">
-                                                            <button class="btn btn-sm btn-outline-info" onclick="viewBill({{ $bill->id }})" title="Lihat Detail">
+                                                        <div class="btn-group btn-group-sm" role="group">
+                                                            <button class="btn btn-outline-info btn-sm" onclick="viewBill({{ $bill->id }})" title="Detail" style="padding: 0.25rem 0.5rem;">
                                                                 <i class="fas fa-eye"></i>
                                                             </button>
                                                             @if($bill->status === 'pending' || $bill->status === 'overdue')
-                                                                <button class="btn btn-sm btn-outline-success" onclick="payBill({{ $bill->id }})" title="Bayar Tagihan">
+                                                                <button class="btn btn-outline-success btn-sm" onclick="payBill({{ $bill->id }})" title="Bayar" style="padding: 0.25rem 0.5rem;">
                                                                     <i class="fas fa-credit-card"></i>
                                                                 </button>
                                                             @endif
@@ -116,9 +114,8 @@
                                 </div>
                             </div>
 
-                            <!-- Mobile & Tablet Card View - For all screens below XL (≤1199px) -->
-                            <!-- Tabel disembunyikan, hanya card view yang muncul -->
-                            <div class="d-xl-none" style="display: block !important; width: 100% !important;">
+                            <!-- Mobile Card View - For all mobile screens (<768px) -->
+                            <div class="d-md-none">
                                 @foreach($bills as $bill)
                                     <div class="card mb-3 shadow-sm border">
                                         <div class="card-body p-3">
@@ -350,10 +347,9 @@
     margin-right: 0;
 }
 
-/* Mobile & Tablet Responsive - Force card view, NO table */
-/* Hide table on ALL screens below 1200px */
-@media screen and (max-width: 1199px) {
-    /* AGGRESSIVE: Hide ALL tables and table containers */
+/* Mobile Responsive - Force card view, NO table */
+@media screen and (max-width: 767px) {
+    /* Hide ALL tables on mobile - AGGRESSIVE */
     .card-body .table-responsive,
     .card-body .table,
     .card-body table,
@@ -362,8 +358,9 @@
     .card-body tr,
     .card-body th,
     .card-body td,
-    .d-none.d-xl-block,
-    .d-none.d-lg-block {
+    .d-none.d-md-block,
+    .d-none.d-lg-block,
+    .d-none.d-xl-block {
         display: none !important;
         visibility: hidden !important;
         width: 0 !important;
@@ -374,7 +371,7 @@
     }
     
     /* Force card view to be visible */
-    .d-xl-none {
+    .d-md-none {
         display: block !important;
         visibility: visible !important;
         width: 100% !important;
@@ -385,29 +382,48 @@
     .card-body,
     .container-fluid,
     .main-content,
-    .card {
+    .card,
+    .row,
+    [class*="col-"] {
         overflow-x: hidden !important;
         max-width: 100% !important;
         width: 100% !important;
     }
     
-    /* Ensure no element causes horizontal scroll */
     html, body {
         overflow-x: hidden !important;
+        max-width: 100vw !important;
+        width: 100% !important;
+    }
+    
+    /* Ensure no element causes horizontal scroll */
+    * {
         max-width: 100% !important;
+        box-sizing: border-box !important;
     }
 }
 
-/* Extra safety for mobile phones */
-@media screen and (max-width: 767px) {
-    /* Double check - hide any remaining tables */
-    table, .table, .table-responsive {
-        display: none !important;
+/* Desktop table - make it compact */
+@media screen and (min-width: 768px) {
+    .table-sm th,
+    .table-sm td {
+        padding: 0.5rem 0.25rem !important;
+        font-size: 0.875rem !important;
     }
     
-    /* Ensure card view */
-    .d-xl-none {
-        display: block !important;
+    .table-sm th {
+        font-size: 0.8rem !important;
+        white-space: nowrap;
+    }
+    
+    /* Ensure table fits without horizontal scroll */
+    .table-responsive {
+        overflow-x: visible !important;
+    }
+    
+    .table {
+        width: 100% !important;
+        table-layout: auto !important;
     }
 }
     
