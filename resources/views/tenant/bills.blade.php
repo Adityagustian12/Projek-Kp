@@ -42,10 +42,10 @@
                     </div>
                     <div class="card-body">
                         @if($bills->count() > 0)
-                            <!-- Desktop Table View -->
-                            <div class="d-none d-lg-block">
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
+                            <!-- Desktop Table View - Only for XL screens (≥1200px) -->
+                            <div class="d-none d-xl-block" style="display: none !important;">
+                                <div class="table-responsive" style="display: none !important;">
+                                    <table class="table table-hover" style="display: none !important;">
                                         <thead>
                                             <tr>
                                                 <th>No. Tagihan</th>
@@ -115,61 +115,10 @@
                                     </table>
                                 </div>
                             </div>
-                            
-                            <!-- Tablet View (Medium screens) -->
-                            <div class="d-none d-md-block d-lg-none">
-                                @foreach($bills as $bill)
-                                    <div class="card mb-3 shadow-sm">
-                                        <div class="card-body">
-                                            <div class="row align-items-center">
-                                                <div class="col-md-3">
-                                                    <strong>#{{ $bill->id }}</strong>
-                                                    <br>
-                                                    <small class="text-muted">{{ $bill->room->room_number }}</small>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <small class="text-muted d-block">Periode</small>
-                                                    <strong>{{ \Carbon\Carbon::parse($bill->period_start)->format('d M') }} - {{ \Carbon\Carbon::parse($bill->period_end)->format('d M Y') }}</strong>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <small class="text-muted d-block">Jumlah</small>
-                                                    <strong class="text-primary">Rp {{ number_format($bill->total_amount, 0, ',', '.') }}</strong>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <small class="text-muted d-block">Jatuh Tempo</small>
-                                                    <strong>{{ \Carbon\Carbon::parse($bill->due_date)->format('d M Y') }}</strong>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    @if($bill->status === 'pending')
-                                                        <span class="badge bg-warning">Belum Dibayar</span>
-                                                    @elseif($bill->status === 'paid')
-                                                        <span class="badge bg-success">Sudah Dibayar</span>
-                                                    @elseif($bill->status === 'overdue')
-                                                        <span class="badge bg-danger">Terlambat</span>
-                                                    @else
-                                                        <span class="badge bg-secondary">{{ ucfirst($bill->status) }}</span>
-                                                    @endif
-                                                </div>
-                                                <div class="col-md-1">
-                                                    <div class="btn-group-vertical" role="group">
-                                                        <button class="btn btn-sm btn-outline-info mb-1" onclick="viewBill({{ $bill->id }})" title="Detail">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                        @if($bill->status === 'pending' || $bill->status === 'overdue')
-                                                            <button class="btn btn-sm btn-outline-success" onclick="payBill({{ $bill->id }})" title="Bayar">
-                                                                <i class="fas fa-credit-card"></i>
-                                                            </button>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
 
-                            <!-- Mobile Card View - Full Information (No horizontal scroll needed) -->
-                            <div class="d-lg-none">
+                            <!-- Mobile & Tablet Card View - For all screens below XL (≤1199px) -->
+                            <!-- Tabel disembunyikan, hanya card view yang muncul -->
+                            <div class="d-xl-none" style="display: block !important; width: 100% !important;">
                                 @foreach($bills as $bill)
                                     <div class="card mb-3 shadow-sm border">
                                         <div class="card-body p-3">
@@ -401,18 +350,66 @@
     margin-right: 0;
 }
 
-/* Mobile Responsive - No horizontal scroll */
-@media (max-width: 991px) {
-    /* Force card view on mobile/tablet - hide table completely */
-    .d-none.d-lg-block .table-responsive,
-    .table-responsive {
+/* Mobile & Tablet Responsive - Force card view, NO table */
+/* Hide table on ALL screens below 1200px */
+@media screen and (max-width: 1199px) {
+    /* AGGRESSIVE: Hide ALL tables and table containers */
+    .card-body .table-responsive,
+    .card-body .table,
+    .card-body table,
+    .card-body thead,
+    .card-body tbody,
+    .card-body tr,
+    .card-body th,
+    .card-body td,
+    .d-none.d-xl-block,
+    .d-none.d-lg-block {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        position: absolute !important;
+        left: -9999px !important;
+    }
+    
+    /* Force card view to be visible */
+    .d-xl-none {
+        display: block !important;
+        visibility: visible !important;
+        width: 100% !important;
+        position: relative !important;
+    }
+    
+    /* Prevent any horizontal overflow */
+    .card-body,
+    .container-fluid,
+    .main-content,
+    .card {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    
+    /* Ensure no element causes horizontal scroll */
+    html, body {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+    }
+}
+
+/* Extra safety for mobile phones */
+@media screen and (max-width: 767px) {
+    /* Double check - hide any remaining tables */
+    table, .table, .table-responsive {
         display: none !important;
     }
     
-    /* Ensure card view is visible */
-    .d-lg-none {
+    /* Ensure card view */
+    .d-xl-none {
         display: block !important;
     }
+}
     
     .main-content {
         padding: 1rem !important;
