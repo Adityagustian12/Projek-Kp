@@ -61,7 +61,7 @@ class Room extends Model
     }
 
     /**
-     * Get image URL - tries multiple methods for reliability
+     * Get image URL - uses storage_url() helper for consistency
      */
     public function getImageUrl($imagePath)
     {
@@ -72,16 +72,7 @@ class Room extends Model
         // Normalize path
         $imagePath = ltrim($imagePath, '/');
         
-        // Try Storage::url() first (most reliable)
-        try {
-            if (\Storage::disk('public')->exists($imagePath)) {
-                return \Storage::disk('public')->url($imagePath);
-            }
-        } catch (\Exception $e) {
-            // Fallback to asset()
-        }
-
-        // Fallback to storage_url() helper
+        // Use storage_url() helper directly (uses /files/ route)
         return storage_url($imagePath);
     }
 
