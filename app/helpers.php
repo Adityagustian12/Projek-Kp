@@ -16,10 +16,18 @@ if (!function_exists('storage_url')) {
         // Normalize path
         $path = ltrim($path, '/');
         
-        // Get APP_URL and ensure no trailing slash
-        $appUrl = rtrim(config('app.url', env('APP_URL', 'http://localhost')), '/');
+        // Try to use route storage.file first (more reliable on shared hosting)
+        // This bypasses symlink issues
+        try {
+            if (\Route::has('storage.file')) {
+                return route('storage.file', ['path' => $path]);
+            }
+        } catch (\Exception $e) {
+            // Fallback to direct URL
+        }
         
-        // Build URL directly - more reliable
+        // Fallback: Build URL directly
+        $appUrl = rtrim(config('app.url', env('APP_URL', 'http://localhost')), '/');
         $url = $appUrl . '/storage/' . $path;
         
         // Fix any double slashes (but preserve http:// or https://)
