@@ -9,8 +9,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 // Storage file access route - MUST be before other routes to avoid conflicts
+// Using /files/ instead of /storage/ to bypass web server blocking
 // This route bypasses all middleware to ensure file access works
-Route::get('/storage/{path}', function ($path) {
+Route::get('/files/{path}', function ($path) {
     // Decode URL-encoded path
     $path = urldecode($path);
     
@@ -47,6 +48,11 @@ Route::get('/storage/{path}', function ($path) {
         'X-Content-Type-Options' => 'nosniff',
     ]);
 })->where('path', '.*')->name('storage.file')->middleware([]);
+
+// Keep /storage/ route as fallback (redirects to /files/)
+Route::get('/storage/{path}', function ($path) {
+    return redirect('/files/' . $path, 301);
+})->where('path', '.*');
 
 // Public Routes (No Authentication Required)
 Route::get('/', [PublicController::class, 'index'])->name('public.home');

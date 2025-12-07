@@ -16,10 +16,10 @@ if (!function_exists('storage_url')) {
         // Normalize path
         $path = ltrim($path, '/');
         
-        // Build URL directly - route /storage/{path} will handle it
-        // This works because route is registered at /storage/{path}
+        // Build URL directly - route /files/{path} will handle it
+        // Using /files/ instead of /storage/ to bypass web server blocking
         $appUrl = rtrim(config('app.url', env('APP_URL', 'http://localhost')), '/');
-        $url = $appUrl . '/storage/' . $path;
+        $url = $appUrl . '/files/' . $path;
         
         // Fix any double slashes (but preserve http:// or https://)
         $url = preg_replace('#([^:])//+#', '$1/', $url);
