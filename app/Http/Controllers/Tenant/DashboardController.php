@@ -132,7 +132,14 @@ class DashboardController extends Controller
                               ->orderBy('created_at', 'desc')
                               ->paginate(10);
 
-        return view('tenant.complaints', compact('complaints'));
+        // Get statistics separately for accurate counts (not from paginated collection)
+        $stats = [
+            'new' => Complaint::forUser($user->id)->where('status', 'new')->count(),
+            'in_progress' => Complaint::forUser($user->id)->where('status', 'in_progress')->count(),
+            'resolved' => Complaint::forUser($user->id)->where('status', 'resolved')->count(),
+        ];
+
+        return view('tenant.complaints', compact('complaints', 'stats'));
     }
 
     /**

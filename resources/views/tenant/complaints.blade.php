@@ -97,13 +97,13 @@
                                                 </td>
                                                 <td>
                                                     <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-outline-info" onclick="viewComplaint({{ $complaint->id }})" title="Lihat Detail">
+                                                        <a href="{{ route('tenant.complaints.detail', $complaint->id) }}" class="btn btn-sm btn-outline-info" title="Lihat Detail">
                                                             <i class="fas fa-eye"></i>
-                                                        </button>
+                                                        </a>
                                                         @if($complaint->status === 'new')
-                                                            <button class="btn btn-sm btn-outline-warning" onclick="editComplaint({{ $complaint->id }})" title="Edit Keluhan">
+                                                            <a href="{{ route('tenant.complaints.detail', $complaint->id) }}" class="btn btn-sm btn-outline-warning" title="Edit Keluhan">
                                                                 <i class="fas fa-edit"></i>
-                                                            </button>
+                                                            </a>
                                                         @endif
                                                     </div>
                                                 </td>
@@ -131,14 +131,14 @@
                 </div>
 
                 <!-- Summary Cards -->
-                @if($complaints->count() > 0)
+                @if(isset($stats) && ($stats['new'] > 0 || $stats['in_progress'] > 0 || $stats['resolved'] > 0))
                 <div class="row mt-4">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card bg-primary text-white">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between">
+                                <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h4 class="mb-0">{{ $complaints->where('status', 'new')->count() }}</h4>
+                                        <h4 class="mb-0">{{ $stats['new'] }}</h4>
                                         <p class="mb-0">Keluhan Baru</p>
                                     </div>
                                     <div class="align-self-center">
@@ -148,12 +148,12 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card bg-warning text-white">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between">
+                                <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h4 class="mb-0">{{ $complaints->where('status', 'in_progress')->count() }}</h4>
+                                        <h4 class="mb-0">{{ $stats['in_progress'] }}</h4>
                                         <p class="mb-0">Sedang Diproses</p>
                                     </div>
                                     <div class="align-self-center">
@@ -163,12 +163,12 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card bg-success text-white">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between">
+                                <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h4 class="mb-0">{{ $complaints->where('status', 'resolved')->count() }}</h4>
+                                        <h4 class="mb-0">{{ $stats['resolved'] }}</h4>
                                         <p class="mb-0">Selesai</p>
                                     </div>
                                     <div class="align-self-center">
@@ -178,7 +178,6 @@
                             </div>
                         </div>
                     </div>
-                    
                 </div>
                 @endif
             </div>
@@ -228,27 +227,47 @@
 .btn-group .btn:last-child {
     margin-right: 0;
 }
+
+.card-hover {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+}
+
+.status-badge {
+    font-size: 0.875rem;
+    padding: 0.35em 0.65em;
+}
 </style>
 
 <script>
-function viewComplaint(complaintId) {
-    // Redirect ke halaman detail keluhan
-    window.location.href = '{{ route("tenant.complaints.detail", ":id") }}'.replace(':id', complaintId);
-}
-
-function editComplaint(complaintId) {
-    // Untuk saat ini, redirect ke detail dulu
-    // Fitur edit bisa ditambahkan nanti jika diperlukan
-    window.location.href = '{{ route("tenant.complaints.detail", ":id") }}'.replace(':id', complaintId);
-}
-
-// Show success/error messages
+// Show success/error messages dengan toast notification yang lebih baik
 @if(session('success'))
-    alert('{{ session('success') }}');
+    // Buat toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        <strong>Berhasil!</strong> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
 @endif
 
 @if(session('error'))
-    alert('{{ session('error') }}');
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 end-0 m-3';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        <strong>Error!</strong> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
 @endif
 </script>
 @endsection
