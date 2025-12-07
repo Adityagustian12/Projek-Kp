@@ -41,14 +41,9 @@
                         </nav>
                     </div>
                     <div>
-                        <a href="{{ route('tenant.complaints') }}" class="btn btn-outline-secondary me-2">
+                        <a href="{{ route('tenant.complaints') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Kembali
                         </a>
-                        @if($complaint->status === 'new')
-                            <button class="btn btn-warning" onclick="editComplaint({{ $complaint->id }})">
-                                <i class="fas fa-edit me-2"></i>Edit Keluhan
-                            </button>
-                        @endif
                     </div>
                 </div>
 
@@ -337,10 +332,6 @@
 </style>
 
 <script>
-function editComplaint(complaintId) {
-    // Implementasi edit complaint
-    alert('Fitur edit keluhan akan segera tersedia!');
-}
 
 function openImageModal(imageSrc) {
     document.getElementById('modalImage').src = imageSrc;

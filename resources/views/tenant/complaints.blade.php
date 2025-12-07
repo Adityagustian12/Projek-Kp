@@ -100,11 +100,6 @@
                                                         <a href="{{ route('tenant.complaints.detail', $complaint->id) }}" class="btn btn-sm btn-outline-info" title="Lihat Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
-                                                        @if($complaint->status === 'new')
-                                                            <a href="{{ route('tenant.complaints.detail', $complaint->id) }}" class="btn btn-sm btn-outline-warning" title="Edit Keluhan">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
-                                                        @endif
                                                     </div>
                                                 </td>
                                             </tr>
