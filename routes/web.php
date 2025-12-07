@@ -24,15 +24,23 @@ Route::get('/storage/{path}', function ($path) {
             abort(404, 'File not found');
         }
         
+        // Check if file is readable
+        if (!is_readable($filePath)) {
+            abort(403, 'File not accessible');
+        }
+        
         // Get MIME type
         $mimeType = mime_content_type($filePath);
         if (!$mimeType) {
             $mimeType = 'application/octet-stream';
         }
         
-        return response()->file($filePath, [
+        // Use readfile() for better compatibility on shared hosting
+        return response()->make(file_get_contents($filePath), 200, [
             'Content-Type' => $mimeType,
+            'Content-Length' => filesize($filePath),
             'Cache-Control' => 'public, max-age=31536000',
+            'Accept-Ranges' => 'bytes',
         ]);
     } catch (\Exception $e) {
         abort(404, 'File not found');
