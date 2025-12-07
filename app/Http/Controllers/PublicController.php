@@ -58,6 +58,27 @@ class PublicController extends Controller
     {
         $room->load('bookings');
         
+        // Ensure images are properly cast as array
+        if ($room->images && !is_array($room->images)) {
+            $room->images = json_decode($room->images, true) ?? [];
+        }
+        
+        // Ensure image paths are correct (should be 'rooms/xxx.jpg', not 'storage/rooms/xxx.jpg')
+        if ($room->images && is_array($room->images)) {
+            $room->images = array_map(function($image) {
+                // Remove 'storage/' prefix if present
+                $image = ltrim($image, '/');
+                if (str_starts_with($image, 'storage/')) {
+                    $image = substr($image, 8); // Remove 'storage/' prefix
+                }
+                // Ensure 'rooms/' prefix if not present
+                if (!str_starts_with($image, 'rooms/')) {
+                    $image = 'rooms/' . ltrim($image, '/');
+                }
+                return $image;
+            }, $room->images);
+        }
+        
         return view('public.room-detail', compact('room'));
     }
 
