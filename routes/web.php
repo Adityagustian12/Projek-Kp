@@ -8,29 +8,7 @@ use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
-// Public Routes (No Authentication Required)
-Route::get('/', [PublicController::class, 'index'])->name('public.home');
-Route::get('/rooms/{room}', [PublicController::class, 'roomDetail'])->name('public.room.detail');
-
-// Dev utility: hard delete a user by email (LOCAL only)
-if (app()->environment('local')) {
-    Route::get('/dev/reset-user/{email}', function ($email) {
-        User::where('email', $email)->forceDelete();
-        return response()->json(['status' => 'ok', 'email' => $email]);
-    });
-}
-
-// Authentication Routes
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('refresh.csrf');
-    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
-});
-
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-// Storage file access route
+// Storage file access route - MUST be before other routes to avoid conflicts
 Route::get('/storage/{path}', function ($path) {
     try {
         // Decode URL-encoded path
@@ -60,6 +38,28 @@ Route::get('/storage/{path}', function ($path) {
         abort(404, 'File not found');
     }
 })->where('path', '.*')->name('storage.file');
+
+// Public Routes (No Authentication Required)
+Route::get('/', [PublicController::class, 'index'])->name('public.home');
+Route::get('/rooms/{room}', [PublicController::class, 'roomDetail'])->name('public.room.detail');
+
+// Dev utility: hard delete a user by email (LOCAL only)
+if (app()->environment('local')) {
+    Route::get('/dev/reset-user/{email}', function ($email) {
+        User::where('email', $email)->forceDelete();
+        return response()->json(['status' => 'ok', 'email' => $email]);
+    });
+}
+
+// Authentication Routes
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('refresh.csrf');
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+});
+
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected Routes (Authentication Required)
 Route::middleware('auth')->group(function () {
