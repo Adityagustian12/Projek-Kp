@@ -32,17 +32,33 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Storage file access route
 Route::get('/storage/{path}', function ($path) {
-    $filePath = storage_path('app/public/' . $path);
-    
-    if (!file_exists($filePath)) {
-        abort(404);
+    try {
+        // Decode URL-encoded path
+        $path = urldecode($path);
+        
+        // Prevent directory traversal
+        $path = str_replace('..', '', $path);
+        $path = ltrim($path, '/');
+        
+        $filePath = storage_path('app/public/' . $path);
+        
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            abort(404, 'File not found');
+        }
+        
+        // Get MIME type
+        $mimeType = mime_content_type($filePath);
+        if (!$mimeType) {
+            $mimeType = 'application/octet-stream';
+        }
+        
+        return response()->file($filePath, [
+            'Content-Type' => $mimeType,
+            'Cache-Control' => 'public, max-age=31536000',
+        ]);
+    } catch (\Exception $e) {
+        abort(404, 'File not found');
     }
-    
-    $mimeType = mime_content_type($filePath);
-    
-    return response()->file($filePath, [
-        'Content-Type' => $mimeType,
-    ]);
 })->where('path', '.*')->name('storage.file');
 
 // Protected Routes (Authentication Required)
