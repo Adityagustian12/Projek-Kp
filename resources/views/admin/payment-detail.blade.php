@@ -158,18 +158,18 @@
                                             <div class="text-center">
                                                 <i class="fas fa-file-pdf fa-5x text-danger mb-3"></i>
                                                 <h6>Bukti Pembayaran PDF</h6>
-                                                <a href="{{ asset('storage/' . $payment->payment_proof) }}" 
+                                                <a href="{{ storage_url($payment->payment_proof) }}" 
                                                    target="_blank" 
                                                    class="btn btn-outline-primary">
                                                     <i class="fas fa-download me-2"></i>Download PDF
                                                 </a>
                                             </div>
                                         @else
-                                            <img src="{{ asset('storage/' . $payment->payment_proof) }}" 
+                                            <img src="{{ storage_url($payment->payment_proof) }}" 
                                                  class="img-fluid rounded" 
                                                  alt="Bukti Pembayaran"
                                                  style="height: 400px; width: 100%; object-fit: cover; cursor: pointer;"
-                                                 onclick="openImageModal('{{ asset('storage/' . $payment->payment_proof) }}')">
+                                                 onclick="openImageModal('{{ storage_url($payment->payment_proof) }}')">
                                         @endif
                                     </div>
                                     <div class="col-md-4">
@@ -183,7 +183,7 @@
                                                     <strong>Ukuran:</strong> {{ number_format(filesize(storage_path('app/public/' . $payment->payment_proof)) / 1024, 1) }} KB
                                                 </p>
                                                 <div class="mt-3">
-                                                    <a href="{{ asset('storage/' . $payment->payment_proof) }}" 
+                                                    <a href="{{ storage_url($payment->payment_proof) }}" 
                                                        target="_blank" 
                                                        class="btn btn-outline-primary">
                                                         <i class="fas fa-download me-2"></i>Download

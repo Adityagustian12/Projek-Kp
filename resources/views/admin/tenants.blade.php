@@ -72,7 +72,7 @@
                                             <tr>
                                                 <td>
                                                     @if($tenant->profile_picture)
-                                                        <img src="{{ asset('storage/' . $tenant->profile_picture) }}" 
+                                                        <img src="{{ storage_url($tenant->profile_picture) }}" 
                                                              class="rounded-circle" 
                                                              width="40" height="40" 
                                                              alt="Foto {{ $tenant->name }}">

@@ -205,7 +205,7 @@
                                                     <td>
                                                         <div class="btn-group" role="group">
                                                             @if($payment->payment_proof)
-                                                                <button class="btn btn-sm btn-outline-info" onclick="viewPaymentProof('{{ asset('storage/' . $payment->payment_proof) }}')" title="Lihat Bukti">
+                                                                <button class="btn btn-sm btn-outline-info" onclick="viewPaymentProof('{{ storage_url($payment->payment_proof) }}')" title="Lihat Bukti">
                                                                     <i class="fas fa-eye"></i>
                                                                 </button>
                                                             @endif

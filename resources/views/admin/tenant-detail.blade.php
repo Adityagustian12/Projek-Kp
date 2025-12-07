@@ -67,7 +67,7 @@
                                 <div class="row">
                                     <div class="col-md-4 text-center mb-4">
                                         @if($tenant->profile_picture)
-                                            <img src="{{ asset('storage/' . $tenant->profile_picture) }}" 
+                                            <img src="{{ storage_url($tenant->profile_picture) }}" 
                                                  class="rounded-circle mb-3" 
                                                  width="120" height="120" 
                                                  alt="Foto {{ $tenant->name }}">

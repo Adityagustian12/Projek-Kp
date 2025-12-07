@@ -145,7 +145,7 @@
                                 <div class="row">
                                     @foreach($room->images as $image)
                                         <div class="col-md-4 mb-3">
-                                            <img src="{{ asset('storage/' . $image) }}" 
+                                            <img src="{{ storage_url($image) }}" 
                                                  class="img-fluid rounded" 
                                                  alt="Gambar Kamar {{ $room->room_number }}"
                                                  style="height: 200px; width: 100%; object-fit: cover;">

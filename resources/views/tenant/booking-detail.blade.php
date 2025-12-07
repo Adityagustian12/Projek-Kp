@@ -129,13 +129,13 @@
                                                         <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
                                                         <h6 class="card-title">Dokumen PDF</h6>
                                                     @else
-                                                        <img src="{{ asset('storage/' . $document) }}" 
+                                                        <img src="{{ storage_url($document) }}" 
                                                              class="img-fluid rounded mb-3" 
                                                              alt="Dokumen Booking"
                                                              style="height: 150px; width: 100%; object-fit: cover;">
                                                         <h6 class="card-title">Dokumen {{ $index + 1 }}</h6>
                                                     @endif
-                                                    <a href="{{ asset('storage/' . $document) }}" 
+                                                    <a href="{{ storage_url($document) }}" 
                                                        target="_blank" 
                                                        class="btn btn-outline-primary btn-sm">
                                                         <i class="fas fa-download me-1"></i>Download
@@ -166,7 +166,7 @@
                                                 <h6>Bukti Pembayaran PDF</h6>
                                             </div>
                                         @else
-                                            <img src="{{ asset('storage/' . $booking->payment_proof) }}" 
+                                            <img src="{{ storage_url($booking->payment_proof) }}" 
                                                  class="img-fluid rounded" 
                                                  alt="Bukti Pembayaran"
                                                  style="height: 300px; width: 100%; object-fit: cover;">
@@ -182,7 +182,7 @@
                                                     <span class="badge bg-warning fs-6">Menunggu Verifikasi</span>
                                                 @endif
                                                 <div class="mt-3">
-                                                    <a href="{{ asset('storage/' . $booking->payment_proof) }}" 
+                                                    <a href="{{ storage_url($booking->payment_proof) }}" 
                                                        target="_blank" 
                                                        class="btn btn-outline-primary">
                                                         <i class="fas fa-download me-2"></i>Download Bukti

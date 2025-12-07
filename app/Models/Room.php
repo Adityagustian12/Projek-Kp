@@ -81,8 +81,8 @@ class Room extends Model
             // Fallback to asset()
         }
 
-        // Fallback to asset()
-        return asset('storage/' . $imagePath);
+        // Fallback to storage_url() helper
+        return storage_url($imagePath);
     }
 
     /**

@@ -123,11 +123,11 @@
                                 <div class="row">
                                     @foreach($complaint->images as $image)
                                         <div class="col-md-4 mb-3">
-                                            <img src="{{ asset('storage/' . $image) }}" 
+                                            <img src="{{ storage_url($image) }}" 
                                                  class="img-fluid rounded" 
                                                  alt="Foto Bukti Keluhan"
                                                  style="height: 200px; width: 100%; object-fit: cover; cursor: pointer;"
-                                                 onclick="openImageModal('{{ asset('storage/' . $image) }}')">
+                                                 onclick="openImageModal('{{ storage_url($image) }}')">
                                         </div>
                                     @endforeach
                                 </div>

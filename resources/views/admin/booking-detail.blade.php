@@ -264,7 +264,7 @@
                                 @if($booking->user)
                                 <div class="text-center mb-3">
                                     @if($booking->user->profile_picture)
-                                        <img src="{{ asset('storage/' . $booking->user->profile_picture) }}" 
+                                        <img src="{{ storage_url($booking->user->profile_picture) }}" 
                                              alt="Profile Picture" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
                                     @else
                                         <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto" 
@@ -412,7 +412,7 @@
                                 <div class="card-body">
                                     @foreach($booking->documents as $document)
                                         <div class="mb-2">
-                                            <a href="{{ asset('storage/' . $document) }}" target="_blank" 
+                                            <a href="{{ storage_url($document) }}" target="_blank" 
                                                class="btn btn-outline-primary btn-sm">
                                                 <i class="fas fa-download me-1"></i>Lihat Dokumen
                                             </a>
@@ -480,7 +480,7 @@
                                                         </small>
                                                     @endif
                                                 </div>
-                                                <a href="{{ asset('storage/' . $proofPath) }}" target="_blank" 
+                                                <a href="{{ storage_url($proofPath) }}" target="_blank" 
                                                    class="btn btn-outline-success btn-sm">
                                                     <i class="fas fa-download me-1"></i>Lihat
                                                 </a>
