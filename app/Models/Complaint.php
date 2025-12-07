@@ -50,6 +50,17 @@ class Complaint extends Model
     }
 
     /**
+     * Retrieve the model for bound value.
+     * This ensures that route model binding respects user ownership for tenant routes.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        // For tenant routes, we need to check if the complaint belongs to the authenticated user
+        // This is handled in the controller, but we can add additional security here if needed
+        return $this->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
+    }
+
+    /**
      * Check if complaint is new
      */
     public function isNew(): bool

@@ -176,10 +176,11 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         
-        // Ensure the complaint belongs to the current user
-        $complaint = Complaint::forUser($user->id)
-                            ->where('id', $complaint->id)
-                            ->firstOrFail();
+        // Ensure the complaint belongs to the current user before authorization
+        // This prevents users from accessing other users' complaints via URL manipulation
+        if ($complaint->user_id !== $user->id) {
+            abort(404);
+        }
         
         $this->authorize('view', $complaint);
         

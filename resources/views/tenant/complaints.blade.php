@@ -232,13 +232,14 @@
 
 <script>
 function viewComplaint(complaintId) {
-    // Implementasi view complaint detail
-    alert('Fitur lihat detail keluhan akan segera tersedia!');
+    // Redirect ke halaman detail keluhan
+    window.location.href = '{{ route("tenant.complaints.detail", ":id") }}'.replace(':id', complaintId);
 }
 
 function editComplaint(complaintId) {
-    // Implementasi edit complaint
-    alert('Fitur edit keluhan akan segera tersedia!');
+    // Untuk saat ini, redirect ke detail dulu
+    // Fitur edit bisa ditambahkan nanti jika diperlukan
+    window.location.href = '{{ route("tenant.complaints.detail", ":id") }}'.replace(':id', complaintId);
 }
 
 // Show success/error messages
