@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 // Storage file access route - MUST be before other routes to avoid conflicts
+// This route bypasses all middleware to ensure file access works
 Route::get('/storage/{path}', function ($path) {
     // Decode URL-encoded path
     $path = urldecode($path);
@@ -21,20 +22,31 @@ Route::get('/storage/{path}', function ($path) {
     
     // Check if file exists
     if (!file_exists($filePath) || !is_file($filePath)) {
-        abort(404, 'File not found: ' . $path);
+        return response('File not found: ' . $path, 404);
     }
     
     // Get file info
     $fileSize = filesize($filePath);
-    $mimeType = mime_content_type($filePath) ?: 'application/octet-stream';
+    $mimeType = mime_content_type($filePath);
+    if (!$mimeType) {
+        $mimeType = 'application/octet-stream';
+    }
     
-    // Return file content directly
-    return response(file_get_contents($filePath), 200)
-        ->header('Content-Type', $mimeType)
-        ->header('Content-Length', $fileSize)
-        ->header('Cache-Control', 'public, max-age=31536000')
-        ->header('Accept-Ranges', 'bytes');
-})->where('path', '.*')->name('storage.file');
+    // Read file content
+    $content = file_get_contents($filePath);
+    if ($content === false) {
+        return response('Cannot read file', 500);
+    }
+    
+    // Return file content directly with proper headers
+    return response($content, 200, [
+        'Content-Type' => $mimeType,
+        'Content-Length' => $fileSize,
+        'Cache-Control' => 'public, max-age=31536000',
+        'Accept-Ranges' => 'bytes',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
+})->where('path', '.*')->name('storage.file')->middleware([]);
 
 // Public Routes (No Authentication Required)
 Route::get('/', [PublicController::class, 'index'])->name('public.home');
