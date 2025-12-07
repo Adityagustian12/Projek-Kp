@@ -19,14 +19,19 @@ if (!function_exists('storage_url')) {
         // Try Storage::url() first (most reliable)
         try {
             if (\Storage::disk('public')->exists($path)) {
-                return \Storage::disk('public')->url($path);
+                $url = \Storage::disk('public')->url($path);
+                // Fix double slashes
+                $url = str_replace('://', '://', preg_replace('#([^:])//+#', '$1/', $url));
+                return $url;
             }
         } catch (\Exception $e) {
             // Fallback to asset()
         }
 
         // Fallback to asset()
-        return asset('storage/' . $path);
+        $url = asset('storage/' . $path);
+        // Fix double slashes
+        return str_replace('://', '://', preg_replace('#([^:])//+#', '$1/', $url));
     }
 }
 
