@@ -10,41 +10,30 @@ use Illuminate\Support\Facades\Route;
 
 // Storage file access route - MUST be before other routes to avoid conflicts
 Route::get('/storage/{path}', function ($path) {
-    try {
-        // Decode URL-encoded path
-        $path = urldecode($path);
-        
-        // Prevent directory traversal
-        $path = str_replace('..', '', $path);
-        $path = ltrim($path, '/');
-        
-        $filePath = storage_path('app/public/' . $path);
-        
-        if (!file_exists($filePath) || !is_file($filePath)) {
-            abort(404, 'File not found');
-        }
-        
-        // Check if file is readable
-        if (!is_readable($filePath)) {
-            abort(403, 'File not accessible');
-        }
-        
-        // Get MIME type
-        $mimeType = mime_content_type($filePath);
-        if (!$mimeType) {
-            $mimeType = 'application/octet-stream';
-        }
-        
-        // Use readfile() for better compatibility on shared hosting
-        return response()->make(file_get_contents($filePath), 200, [
-            'Content-Type' => $mimeType,
-            'Content-Length' => filesize($filePath),
-            'Cache-Control' => 'public, max-age=31536000',
-            'Accept-Ranges' => 'bytes',
-        ]);
-    } catch (\Exception $e) {
-        abort(404, 'File not found');
+    // Decode URL-encoded path
+    $path = urldecode($path);
+    
+    // Prevent directory traversal
+    $path = str_replace('..', '', $path);
+    $path = ltrim($path, '/');
+    
+    $filePath = storage_path('app/public/' . $path);
+    
+    // Check if file exists
+    if (!file_exists($filePath) || !is_file($filePath)) {
+        abort(404, 'File not found: ' . $path);
     }
+    
+    // Get file info
+    $fileSize = filesize($filePath);
+    $mimeType = mime_content_type($filePath) ?: 'application/octet-stream';
+    
+    // Return file content directly
+    return response(file_get_contents($filePath), 200)
+        ->header('Content-Type', $mimeType)
+        ->header('Content-Length', $fileSize)
+        ->header('Cache-Control', 'public, max-age=31536000')
+        ->header('Accept-Ranges', 'bytes');
 })->where('path', '.*')->name('storage.file');
 
 // Public Routes (No Authentication Required)
