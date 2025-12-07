@@ -63,28 +63,9 @@ class PublicController extends Controller
             $room->images = json_decode($room->images, true) ?? [];
         }
         
-        // Normalize image paths (remove any leading slashes, ensure consistent format)
-        if ($room->images && is_array($room->images)) {
-            $room->images = array_map(function($image) {
-                if (empty($image)) {
-                    return null;
-                }
-                
-                // Remove leading slashes
-                $image = ltrim($image, '/');
-                
-                // Remove 'storage/' prefix if present (should not be in database)
-                if (str_starts_with($image, 'storage/')) {
-                    $image = substr($image, 8);
-                }
-                
-                // Path should be like 'rooms/filename.jpg' (from store('rooms', 'public'))
-                // Don't force add 'rooms/' prefix if it's already there or if path is empty
-                return $image;
-            }, $room->images);
-            
-            // Remove any null values
-            $room->images = array_filter($room->images);
+        // Ensure images is an array (even if empty)
+        if (!$room->images) {
+            $room->images = [];
         }
         
         return view('public.room-detail', compact('room'));
