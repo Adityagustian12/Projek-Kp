@@ -25,7 +25,21 @@
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card h-100 card-hover shadow-sm">
                     @if($room->images && count($room->images) > 0)
-                        <img src="{{ asset('storage/' . $room->images[0]) }}" class="card-img-top" alt="Room {{ $room->room_number }}" style="height: 200px; object-fit: cover;">
+                        @php
+                            $imagePath = $room->images[0];
+                            // Path di database: rooms/filename.jpg
+                            // Coba route dulu, jika tidak ada gunakan asset
+                            try {
+                                $imageUrl = route('storage.file', ['path' => $imagePath]);
+                            } catch (\Exception $e) {
+                                $imageUrl = asset('storage/' . $imagePath);
+                            }
+                        @endphp
+                        <img src="{{ $imageUrl }}" 
+                             class="card-img-top" 
+                             alt="Room {{ $room->room_number }}" 
+                             style="height: 200px; object-fit: cover;"
+                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'card-img-top bg-light d-flex align-items-center justify-content-center\' style=\'height: 200px;\'><i class=\'fas fa-image fa-3x text-muted\'></i></div>';">
                     @else
                         <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
                             <i class="fas fa-image fa-3x text-muted"></i>

@@ -49,6 +49,42 @@ class Room extends Model
     }
 
     /**
+     * Get the first image URL for the room
+     */
+    public function getFirstImageUrlAttribute()
+    {
+        if (!$this->images || count($this->images) === 0) {
+            return null;
+        }
+
+        $imagePath = $this->images[0];
+        
+        // If path doesn't start with storage/, add it
+        if (!str_starts_with($imagePath, 'storage/')) {
+            $imagePath = 'storage/' . $imagePath;
+        }
+        
+        return asset($imagePath);
+    }
+
+    /**
+     * Get all image URLs for the room
+     */
+    public function getImageUrlsAttribute()
+    {
+        if (!$this->images || count($this->images) === 0) {
+            return [];
+        }
+
+        return array_map(function($imagePath) {
+            if (!str_starts_with($imagePath, 'storage/')) {
+                $imagePath = 'storage/' . $imagePath;
+            }
+            return asset($imagePath);
+        }, $this->images);
+    }
+
+    /**
      * Check if room is available
      */
     public function isAvailable(): bool
