@@ -26,7 +26,7 @@ class DashboardController extends Controller
             'overdue_bills' => Bill::where('user_id', $user->id)
                                   ->where('status', 'overdue')
                                   ->count(),
-            'active_complaints' => Complaint::where('user_id', $user->id)
+            'active_complaints' => Complaint::forUser($user->id)
                                             ->whereIn('status', ['new', 'in_progress'])
                                             ->count(),
             'pending_payments' => Payment::where('user_id', $user->id)
@@ -39,7 +39,7 @@ class DashboardController extends Controller
                            ->limit(5)
                            ->get();
 
-        $recent_complaints = Complaint::where('user_id', $user->id)
+        $recent_complaints = Complaint::forUser($user->id)
                                      ->orderBy('created_at', 'desc')
                                      ->limit(5)
                                      ->get();
@@ -126,7 +126,8 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         
-        $complaints = Complaint::where('user_id', $user->id)
+        // Ensure we only get complaints for the current user
+        $complaints = Complaint::forUser($user->id)
                               ->with('room')
                               ->orderBy('created_at', 'desc')
                               ->paginate(10);
@@ -173,6 +174,13 @@ class DashboardController extends Controller
      */
     public function complaintDetail(Complaint $complaint)
     {
+        $user = auth()->user();
+        
+        // Ensure the complaint belongs to the current user
+        $complaint = Complaint::forUser($user->id)
+                            ->where('id', $complaint->id)
+                            ->firstOrFail();
+        
         $this->authorize('view', $complaint);
         
         $complaint->load('room');

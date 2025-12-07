@@ -42,6 +42,14 @@ class Complaint extends Model
     }
 
     /**
+     * Scope a query to only include complaints for a specific user.
+     */
+    public function scopeForUser($query, $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    /**
      * Check if complaint is new
      */
     public function isNew(): bool
