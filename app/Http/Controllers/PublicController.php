@@ -29,7 +29,7 @@ class PublicController extends Controller
             ->orderBy('room_number')
             ->pluck('id');
         
-        // Load rooms fresh from database
+        // Load rooms fresh from database with all attributes including images
         $rooms = Room::whereIn('id', $roomIds)
                     ->orderByRaw("FIELD(status, 'available', 'occupied', 'maintenance')")
                     ->orderBy('room_number')
@@ -38,13 +38,11 @@ class PublicController extends Controller
         // Sync status for each room to ensure accuracy
         foreach ($rooms as $room) {
             $room->syncStatus();
+            // Ensure images are properly cast as array after sync
+            if ($room->images && !is_array($room->images)) {
+                $room->images = json_decode($room->images, true) ?? [];
+            }
         }
-        
-        // Force refresh from database
-        $rooms = Room::whereIn('id', $roomIds)
-                    ->orderByRaw("FIELD(status, 'available', 'occupied', 'maintenance')")
-                    ->orderBy('room_number')
-                    ->get();
         
         return view('public.home', compact('rooms'));
     }

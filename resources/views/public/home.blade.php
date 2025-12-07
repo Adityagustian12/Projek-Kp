@@ -24,12 +24,21 @@
         @forelse($rooms as $room)
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card h-100 card-hover shadow-sm">
-                    @if($room->images && count($room->images) > 0)
-                        <img src="{{ asset('storage/' . $room->images[0]) }}" 
+                    @php
+                        // Ensure images is an array
+                        $roomImages = is_array($room->images) ? $room->images : (is_string($room->images) ? json_decode($room->images, true) : []);
+                    @endphp
+                    @if(!empty($roomImages) && count($roomImages) > 0)
+                        @php
+                            $firstImage = $roomImages[0];
+                            // Ensure path is correct
+                            $imageUrl = asset('storage/' . ltrim($firstImage, '/'));
+                        @endphp
+                        <img src="{{ $imageUrl }}" 
                              class="card-img-top" 
                              alt="Room {{ $room->room_number }}" 
                              style="height: 200px; object-fit: cover;"
-                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'card-img-top bg-light d-flex align-items-center justify-content-center\' style=\'height: 200px;\'><i class=\'fas fa-image fa-3x text-muted\'></i></div>';">
+                             onerror="console.error('Image failed to load:', this.src); this.onerror=null; this.parentElement.innerHTML='<div class=\'card-img-top bg-light d-flex align-items-center justify-content-center\' style=\'height: 200px;\'><i class=\'fas fa-image fa-3x text-muted\'></i></div>';">
                     @else
                         <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
                             <i class="fas fa-image fa-3x text-muted"></i>
