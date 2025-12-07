@@ -16,17 +16,8 @@ if (!function_exists('storage_url')) {
         // Normalize path
         $path = ltrim($path, '/');
         
-        // Try to use route storage.file first (more reliable on shared hosting)
-        // This bypasses symlink issues
-        try {
-            if (\Route::has('storage.file')) {
-                return route('storage.file', ['path' => $path]);
-            }
-        } catch (\Exception $e) {
-            // Fallback to direct URL
-        }
-        
-        // Fallback: Build URL directly
+        // Build URL directly - route /storage/{path} will handle it
+        // This works because route is registered at /storage/{path}
         $appUrl = rtrim(config('app.url', env('APP_URL', 'http://localhost')), '/');
         $url = $appUrl . '/storage/' . $path;
         
