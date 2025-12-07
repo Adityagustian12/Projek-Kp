@@ -17,11 +17,7 @@
                             <div class="row g-2">
                                 @foreach($room->images as $image)
                                     <div class="col-6 col-md-4">
-                                        @php
-                                            // Use asset() directly - more reliable
-                                            $imageUrl = asset('storage/' . $image);
-                                        @endphp
-                                        <img src="{{ $imageUrl }}" 
+                                        <img src="{{ $room->getImageUrl($image) }}" 
                                              class="img-fluid rounded shadow-sm" 
                                              alt="Room {{ $room->room_number }}"
                                              style="height: 180px; width: 100%; object-fit: cover;"

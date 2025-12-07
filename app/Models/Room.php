@@ -57,14 +57,32 @@ class Room extends Model
             return null;
         }
 
-        $imagePath = $this->images[0];
-        
-        // If path doesn't start with storage/, add it
-        if (!str_starts_with($imagePath, 'storage/')) {
-            $imagePath = 'storage/' . $imagePath;
+        return $this->getImageUrl($this->images[0]);
+    }
+
+    /**
+     * Get image URL - tries multiple methods for reliability
+     */
+    public function getImageUrl($imagePath)
+    {
+        if (empty($imagePath)) {
+            return null;
         }
+
+        // Normalize path
+        $imagePath = ltrim($imagePath, '/');
         
-        return asset($imagePath);
+        // Try Storage::url() first (most reliable)
+        try {
+            if (\Storage::disk('public')->exists($imagePath)) {
+                return \Storage::disk('public')->url($imagePath);
+            }
+        } catch (\Exception $e) {
+            // Fallback to asset()
+        }
+
+        // Fallback to asset()
+        return asset('storage/' . $imagePath);
     }
 
     /**
@@ -77,10 +95,7 @@ class Room extends Model
         }
 
         return array_map(function($imagePath) {
-            if (!str_starts_with($imagePath, 'storage/')) {
-                $imagePath = 'storage/' . $imagePath;
-            }
-            return asset($imagePath);
+            return $this->getImageUrl($imagePath);
         }, $this->images);
     }
 
