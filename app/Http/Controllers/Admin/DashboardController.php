@@ -555,7 +555,11 @@ class DashboardController extends Controller
      */
     public function complaints()
     {
+        // Only get complaints where user still exists (not soft deleted)
         $complaints = Complaint::with(['user', 'room'])
+                              ->whereHas('user', function($query) {
+                                  $query->whereNull('deleted_at');
+                              })
                               ->orderBy('created_at', 'desc')
                               ->paginate(15);
 
@@ -567,7 +571,14 @@ class DashboardController extends Controller
      */
     public function complaintDetail(Complaint $complaint)
     {
+        // Load user and room, but handle case where user might be deleted
         $complaint->load(['user', 'room']);
+        
+        // If user is soft deleted, still show complaint but with warning
+        if (!$complaint->user || $complaint->user->trashed()) {
+            // User has been deleted, but we still want to show the complaint
+            // The view will handle null user gracefully
+        }
         
         return view('admin.complaint-detail', compact('complaint'));
     }

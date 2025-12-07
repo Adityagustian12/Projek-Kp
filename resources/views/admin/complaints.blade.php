@@ -72,20 +72,32 @@
                                                     <strong>#{{ $complaint->id }}</strong>
                                                 </td>
                                                 <td>
-                                                    <div>
-                                                        <strong>{{ $complaint->user->name }}</strong>
-                                                        <br>
-                                                        <small class="text-muted">{{ $complaint->user->email }}</small>
-                                                    </div>
+                                                    @if($complaint->user)
+                                                        <div>
+                                                            <strong>{{ $complaint->user->name }}</strong>
+                                                            <br>
+                                                            <small class="text-muted">{{ $complaint->user->email }}</small>
+                                                        </div>
+                                                    @else
+                                                        <div>
+                                                            <strong class="text-muted">User Tidak Ditemukan</strong>
+                                                            <br>
+                                                            <small class="text-muted">User ID: {{ $complaint->user_id }}</small>
+                                                        </div>
+                                                    @endif
                                                 </td>
                                                 <td>
-                                                    @php
-                                                        $currentRoom = $complaint->user->getCurrentRoom();
-                                                    @endphp
-                                                    @if($currentRoom)
-                                                        <span class="badge bg-info">{{ $currentRoom->room_number }}</span>
+                                                    @if($complaint->user)
+                                                        @php
+                                                            $currentRoom = $complaint->user->getCurrentRoom();
+                                                        @endphp
+                                                        @if($currentRoom)
+                                                            <span class="badge bg-info">{{ $currentRoom->room_number }}</span>
+                                                        @else
+                                                            <span class="badge bg-secondary">Tidak Menempati Kamar</span>
+                                                        @endif
                                                     @else
-                                                        <span class="badge bg-secondary">Tidak Menempati Kamar</span>
+                                                        <span class="badge bg-secondary">-</span>
                                                     @endif
                                                 </td>
                                                 <td>

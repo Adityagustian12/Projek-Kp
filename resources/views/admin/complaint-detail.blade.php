@@ -170,16 +170,16 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-12 mb-2">
-                                        <strong>Nama:</strong> {{ $complaint->user->name }}
+                                        <strong>Nama:</strong> {{ $complaint->user ? $complaint->user->name : 'User Tidak Ditemukan' }}
                                     </div>
                                     <div class="col-12 mb-2">
-                                        <strong>Email:</strong> {{ $complaint->user->email }}
+                                        <strong>Email:</strong> {{ $complaint->user ? $complaint->user->email : '-' }}
                                     </div>
                                     <div class="col-12 mb-2">
-                                        <strong>Telepon:</strong> {{ $complaint->user->phone ?? 'Tidak ada' }}
+                                        <strong>Telepon:</strong> {{ $complaint->user ? ($complaint->user->phone ?? 'Tidak ada') : '-' }}
                                     </div>
                                     <div class="col-12">
-                                        <strong>Alamat:</strong> {{ $complaint->user->address ?? 'Tidak ada' }}
+                                        <strong>Alamat:</strong> {{ $complaint->user ? ($complaint->user->address ?? 'Tidak ada') : '-' }}
                                     </div>
                                 </div>
                             </div>
@@ -194,7 +194,7 @@
                             </div>
                             <div class="card-body">
                                 @php
-                                    $currentRoom = $complaint->user->getCurrentRoom();
+                                    $currentRoom = $complaint->user ? $complaint->user->getCurrentRoom() : null;
                                 @endphp
                                 <div class="row">
                                     <div class="col-12 mb-2">
@@ -202,7 +202,7 @@
                                         @if($currentRoom)
                                             {{ $currentRoom->room_number }}
                                         @else
-                                            <span class="text-muted">Tidak Menempati Kamar</span>
+                                            <span class="text-muted">{{ $complaint->user ? 'Tidak Menempati Kamar' : 'User Tidak Ditemukan' }}</span>
                                         @endif
                                     </div>
                                     @if($currentRoom)
