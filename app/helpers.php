@@ -16,22 +16,16 @@ if (!function_exists('storage_url')) {
         // Normalize path
         $path = ltrim($path, '/');
         
-        // Try Storage::url() first (most reliable)
-        try {
-            if (\Storage::disk('public')->exists($path)) {
-                $url = \Storage::disk('public')->url($path);
-                // Fix double slashes
-                $url = str_replace('://', '://', preg_replace('#([^:])//+#', '$1/', $url));
-                return $url;
-            }
-        } catch (\Exception $e) {
-            // Fallback to asset()
-        }
-
-        // Fallback to asset()
-        $url = asset('storage/' . $path);
-        // Fix double slashes
-        return str_replace('://', '://', preg_replace('#([^:])//+#', '$1/', $url));
+        // Get APP_URL and ensure no trailing slash
+        $appUrl = rtrim(config('app.url', env('APP_URL', 'http://localhost')), '/');
+        
+        // Build URL directly - more reliable
+        $url = $appUrl . '/storage/' . $path;
+        
+        // Fix any double slashes (but preserve http:// or https://)
+        $url = preg_replace('#([^:])//+#', '$1/', $url);
+        
+        return $url;
     }
 }
 
