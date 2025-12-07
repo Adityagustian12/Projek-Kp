@@ -17,7 +17,7 @@
                             <div class="row g-2">
                                 @foreach($room->images as $image)
                                     <div class="col-6 col-md-4">
-                                        <img src="{{ asset('storage/' . $image) }}" 
+                                        <img src="{{ route('storage.file', ['path' => $image]) }}" 
                                              class="img-fluid rounded shadow-sm" 
                                              alt="Room {{ $room->room_number }}"
                                              style="height: 180px; width: 100%; object-fit: cover;"
