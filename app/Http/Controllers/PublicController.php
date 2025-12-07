@@ -36,11 +36,14 @@ class PublicController extends Controller
                     ->get();
         
         // Sync status for each room to ensure accuracy
+        // Note: syncStatus() uses DB::table() so it won't affect model attributes
         foreach ($rooms as $room) {
+            // Store images before any operations
+            $images = $room->images;
             $room->syncStatus();
-            // Ensure images are properly cast as array after sync
-            if ($room->images && !is_array($room->images)) {
-                $room->images = json_decode($room->images, true) ?? [];
+            // Ensure images are preserved (syncStatus doesn't touch images column)
+            if ($images) {
+                $room->setAttribute('images', $images);
             }
         }
         
